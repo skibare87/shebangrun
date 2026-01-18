@@ -57,3 +57,11 @@ PROGRESS.md
 ProjectPlan.md
 TEST_RESULTS.md
 SUMMARY.md
+
+# Internal checkpoint files
+*.json
+!pyproject.toml
+!package.json
+
+# Shell configs
+.bashrc
