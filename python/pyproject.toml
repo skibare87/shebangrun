@@ -31,4 +31,5 @@ dependencies = [
 [project.urls]
 Homepage = "https://shebang.run"
 Documentation = "https://shebang.run/docs"
-Repository = "https://github.com/shebangrun/python-client"
+Repository = "https://github.com/skibare87/shebangrun"
+"Bug Tracker" = "https://github.com/skibare87/shebangrun/issues"

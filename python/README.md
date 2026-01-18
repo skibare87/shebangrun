@@ -273,4 +273,5 @@ MIT
 
 - Website: https://shebang.run
 - Documentation: https://shebang.run/docs
-- GitHub: https://github.com/shebangrun/python-client
+- GitHub: https://github.com/skibare87/shebangrun
+- PyPI: https://pypi.org/project/shebangrun/
