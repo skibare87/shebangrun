@@ -1,0 +1,59 @@
+# Binaries
+server
+*.exe
+*.dll
+*.so
+*.dylib
+
+# Test binary
+*.test
+
+# Output
+*.out
+
+# Go workspace file
+go.work
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Environment
+.env
+.env.local
+
+# Data
+/data/
+*.db
+
+# Logs
+*.log
+
+# Private keys
+*.pem
+*.key
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.egg-info/
+dist/
+build/
+.pytest_cache/
+.venv/
+venv/
+
+# Temporary files
+*.tmp
+/tmp/
+plancreated.json
+
+# Internal development docs
+PROGRESS.md
+ProjectPlan.md
+TEST_RESULTS.md
+SUMMARY.md

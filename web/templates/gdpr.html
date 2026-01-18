@@ -1,0 +1,156 @@
+{{define "content"}}
+<div class="max-w-4xl mx-auto prose">
+    <h1>GDPR Information</h1>
+    <p class="text-gray-600">Your data protection rights under the General Data Protection Regulation</p>
+
+    <h2>What is GDPR?</h2>
+    <p>
+        The General Data Protection Regulation (GDPR) is a European Union law that gives you control over 
+        your personal data. Even if you're not in the EU, we extend these rights to all our users.
+    </p>
+
+    <h2>Your Rights</h2>
+
+    <h3>1. Right to Access</h3>
+    <p>
+        You can access all your personal data at any time. Go to <a href="/account">Account Settings</a> 
+        and click "Export My Data" to download everything we have about you.
+    </p>
+
+    <h3>2. Right to Rectification</h3>
+    <p>
+        You can update your account information, scripts, and keys at any time through your dashboard.
+    </p>
+
+    <h3>3. Right to Erasure ("Right to be Forgotten")</h3>
+    <p>
+        You can delete your account and all associated data at any time. Go to 
+        <a href="/account">Account Settings</a> and click "Delete My Account". This will:
+    </p>
+    <ul>
+        <li>Permanently delete your account</li>
+        <li>Delete all your scripts and versions</li>
+        <li>Remove all your keys</li>
+        <li>Revoke all share tokens</li>
+        <li>Remove all access logs containing your data</li>
+    </ul>
+
+    <h3>4. Right to Data Portability</h3>
+    <p>
+        You can export your data in JSON format. This includes:
+    </p>
+    <ul>
+        <li>Account information</li>
+        <li>All scripts and their versions</li>
+        <li>Public keys</li>
+        <li>Metadata and timestamps</li>
+    </ul>
+
+    <h3>5. Right to Object</h3>
+    <p>
+        You can object to how we process your data. Contact us at 
+        <a href="mailto:privacy@shebang.run">privacy@shebang.run</a>
+    </p>
+
+    <h3>6. Right to Restrict Processing</h3>
+    <p>
+        You can request that we temporarily stop processing your data while we investigate a concern.
+    </p>
+
+    <h2>What Data We Collect</h2>
+    <table class="min-w-full">
+        <thead>
+            <tr>
+                <th class="text-left">Data Type</th>
+                <th class="text-left">Purpose</th>
+                <th class="text-left">Legal Basis</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td>Username, Email</td>
+                <td>Account management</td>
+                <td>Contract</td>
+            </tr>
+            <tr>
+                <td>Password (hashed)</td>
+                <td>Authentication</td>
+                <td>Contract</td>
+            </tr>
+            <tr>
+                <td>Scripts</td>
+                <td>Service provision</td>
+                <td>Contract</td>
+            </tr>
+            <tr>
+                <td>Public Keys</td>
+                <td>Script signing/encryption</td>
+                <td>Contract</td>
+            </tr>
+            <tr>
+                <td>IP Address, Logs</td>
+                <td>Security, abuse prevention</td>
+                <td>Legitimate Interest</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <h2>Data Retention</h2>
+    <ul>
+        <li><strong>Active accounts:</strong> Data retained while account is active</li>
+        <li><strong>Deleted accounts:</strong> All data permanently deleted within 30 days</li>
+        <li><strong>Access logs:</strong> Retained for 90 days for security purposes</li>
+        <li><strong>Backups:</strong> Deleted data removed from backups within 90 days</li>
+    </ul>
+
+    <h2>Data Processors</h2>
+    <p>We may use the following third-party processors:</p>
+    <ul>
+        <li><strong>Cloud Storage:</strong> For storing scripts (S3-compatible services)</li>
+        <li><strong>Database Hosting:</strong> For storing account data</li>
+        <li><strong>OAuth Providers:</strong> GitHub, Google (if you choose to use them)</li>
+    </ul>
+
+    <h2>International Data Transfers</h2>
+    <p>
+        Your data may be transferred to and processed in countries outside the EU. We ensure adequate 
+        protection through:
+    </p>
+    <ul>
+        <li>Standard Contractual Clauses (SCCs)</li>
+        <li>Encryption in transit and at rest</li>
+        <li>Regular security audits</li>
+    </ul>
+
+    <h2>Data Breach Notification</h2>
+    <p>
+        In the event of a data breach that affects your personal data, we will notify you within 72 hours 
+        via email and through a notice on our website.
+    </p>
+
+    <h2>Supervisory Authority</h2>
+    <p>
+        If you're in the EU and have concerns about how we handle your data, you can lodge a complaint 
+        with your local data protection authority.
+    </p>
+
+    <h2>Contact Our Data Protection Officer</h2>
+    <p>
+        For any GDPR-related questions or to exercise your rights:
+    </p>
+    <ul>
+        <li>Email: <a href="mailto:dpo@shebang.run">dpo@shebang.run</a></li>
+        <li>Or use the data export/deletion tools in <a href="/account">Account Settings</a></li>
+    </ul>
+
+    <h2>Quick Actions</h2>
+    <div class="flex gap-4 not-prose">
+        <a href="/account" class="bg-indigo-600 text-white px-6 py-2 rounded hover:bg-indigo-700">
+            Export My Data
+        </a>
+        <a href="/account" class="bg-red-600 text-white px-6 py-2 rounded hover:bg-red-700">
+            Delete My Account
+        </a>
+    </div>
+</div>
+{{end}}

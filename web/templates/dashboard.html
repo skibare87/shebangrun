@@ -1,0 +1,164 @@
+{{define "content"}}
+<div x-data="dashboard()" x-init="init()">
+    <div class="flex justify-between items-center mb-6">
+        <h1 class="text-3xl font-bold">My Scripts</h1>
+        <a href="/script-editor" class="bg-indigo-600 text-white px-4 py-2 rounded hover:bg-indigo-700">New Script</a>
+    </div>
+
+    <!-- Toast notification -->
+    <div x-show="showToast" x-transition 
+         class="fixed top-4 right-4 bg-green-600 text-white px-6 py-3 rounded-lg shadow-lg z-50"
+         style="display: none;">
+        <span x-text="toastMessage"></span>
+    </div>
+
+    <div x-show="scripts.length === 0" class="text-center py-12 bg-white rounded-lg shadow">
+        <p class="text-gray-600 mb-4">You haven't created any scripts yet.</p>
+        <a href="/script-editor" class="text-indigo-600 hover:text-indigo-700">Create your first script</a>
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        <template x-for="script in scripts" :key="script.id">
+            <div class="bg-white p-6 rounded-lg shadow hover:shadow-lg transition">
+                <div class="flex justify-between items-start mb-2">
+                    <h3 class="text-xl font-bold" x-text="script.name"></h3>
+                    <span class="text-xs px-2 py-1 rounded" 
+                          :class="{
+                              'bg-green-100 text-green-800': script.visibility === 'public',
+                              'bg-yellow-100 text-yellow-800': script.visibility === 'unlisted',
+                              'bg-red-100 text-red-800': script.visibility === 'private'
+                          }"
+                          x-text="script.visibility"></span>
+                </div>
+                <p class="text-gray-600 mb-2 text-sm" x-text="script.description || 'No description'"></p>
+                <div class="flex items-center space-x-2 text-sm text-gray-500 mb-4">
+                    <span x-text="'v' + script.version"></span>
+                    <span>•</span>
+                    <span x-text="new Date(script.updated_at).toLocaleDateString()"></span>
+                </div>
+                <div class="flex flex-wrap gap-2">
+                    <a :href="'/script-editor?id=' + script.id" class="text-indigo-600 hover:text-indigo-700 text-sm">Edit</a>
+                    <button @click="viewScript(script)" class="text-blue-600 hover:text-blue-700 text-sm">View</button>
+                    <button @click="copyUrl(script)" class="text-green-600 hover:text-green-700 text-sm">Copy URL</button>
+                    <button @click="deleteScript(script.id)" class="text-red-600 hover:text-red-700 text-sm">Delete</button>
+                </div>
+            </div>
+        </template>
+    </div>
+
+    <!-- View Modal -->
+    <div x-show="viewModal" @click.away="viewModal = false" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50" style="display: none;">
+        <div class="bg-white p-8 rounded-lg max-w-4xl w-full max-h-screen overflow-y-auto" @click.stop>
+            <div class="flex justify-between items-start mb-4">
+                <div>
+                    <h2 class="text-2xl font-bold" x-text="currentScript?.name"></h2>
+                    <p class="text-gray-600" x-text="currentScript?.description"></p>
+                </div>
+                <button @click="viewModal = false" class="text-gray-500 hover:text-gray-700">✕</button>
+            </div>
+            <div class="mb-4">
+                <label class="block text-sm font-medium mb-2">Usage:</label>
+                <div class="bg-gray-900 text-green-400 p-4 rounded font-mono text-sm">
+                    <div x-text="'curl ' + window.location.origin + '/' + getUser().username + '/' + currentScript?.name + ' | sh'"></div>
+                </div>
+            </div>
+            <div>
+                <label class="block text-sm font-medium mb-2">Content:</label>
+                <pre class="bg-gray-100 p-4 rounded overflow-x-auto text-sm" x-text="scriptContent"></pre>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function dashboard() {
+    return {
+        scripts: [],
+        viewModal: false,
+        currentScript: null,
+        scriptContent: '',
+        showToast: false,
+        toastMessage: '',
+        
+        init() {
+            if (!getToken()) {
+                window.location.href = '/login';
+                return;
+            }
+            this.loadScripts();
+        },
+        
+        getUser() {
+            return JSON.parse(localStorage.getItem('user') || '{}');
+        },
+        
+        loadScripts() {
+            fetch('/api/scripts', {
+                headers: { 'Authorization': 'Bearer ' + getToken() }
+            })
+            .then(res => res.json())
+            .then(data => this.scripts = data || []);
+        },
+        
+        viewScript(script) {
+            this.currentScript = script;
+            const user = this.getUser();
+            fetch(`/${user.username}/${script.name}`)
+                .then(res => res.text())
+                .then(content => {
+                    this.scriptContent = content;
+                    this.viewModal = true;
+                });
+        },
+        
+        copyUrl(script) {
+            const user = this.getUser();
+            const url = `${window.location.origin}/${user.username}/${script.name}`;
+            if (navigator.clipboard && navigator.clipboard.writeText) {
+                navigator.clipboard.writeText(url).then(() => {
+                    this.showToastMessage('URL copied to clipboard!');
+                }).catch(() => {
+                    this.fallbackCopy(url);
+                });
+            } else {
+                this.fallbackCopy(url);
+            }
+        },
+        
+        fallbackCopy(text) {
+            const textarea = document.createElement('textarea');
+            textarea.value = text;
+            textarea.style.position = 'fixed';
+            textarea.style.opacity = '0';
+            document.body.appendChild(textarea);
+            textarea.select();
+            try {
+                document.execCommand('copy');
+                this.showToastMessage('URL copied to clipboard!');
+            } catch (err) {
+                this.showToastMessage('Failed to copy URL');
+            }
+            document.body.removeChild(textarea);
+        },
+        
+        showToastMessage(message) {
+            this.toastMessage = message;
+            this.showToast = true;
+            setTimeout(() => {
+                this.showToast = false;
+            }, 3000);
+        },
+        
+        deleteScript(id) {
+            if (!confirm('Delete this script? This cannot be undone.')) return;
+            
+            fetch('/api/scripts/' + id, {
+                method: 'DELETE',
+                headers: { 'Authorization': 'Bearer ' + getToken() }
+            })
+            .then(() => this.loadScripts());
+        }
+    }
+}
+</script>
+{{end}}

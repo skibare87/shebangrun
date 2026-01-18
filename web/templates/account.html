@@ -1,0 +1,209 @@
+{{define "content"}}
+<div x-data="accountSettings()" x-init="init()">
+    <div class="max-w-4xl mx-auto">
+        <h1 class="text-3xl font-bold mb-6">Account Settings</h1>
+
+        <!-- Account Information -->
+        <div class="bg-white p-6 rounded-lg shadow mb-6">
+            <h2 class="text-xl font-bold mb-4">Account Information</h2>
+            <div class="space-y-3">
+                <div>
+                    <label class="text-sm font-medium text-gray-700">Username</label>
+                    <p class="text-lg" x-text="user.username"></p>
+                </div>
+                <div>
+                    <label class="text-sm font-medium text-gray-700">Email</label>
+                    <p class="text-lg" x-text="user.email"></p>
+                </div>
+                <div>
+                    <label class="text-sm font-medium text-gray-700">Account Type</label>
+                    <p class="text-lg">
+                        <span x-show="user.is_admin" class="bg-purple-100 text-purple-800 px-2 py-1 rounded text-sm">Admin</span>
+                        <span x-show="!user.is_admin" class="bg-gray-100 text-gray-800 px-2 py-1 rounded text-sm">User</span>
+                    </p>
+                </div>
+                <div>
+                    <label class="text-sm font-medium text-gray-700">Member Since</label>
+                    <p class="text-lg" x-text="user.created_at ? new Date(user.created_at).toLocaleDateString() : 'N/A'"></p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Change Password -->
+        <div class="bg-white p-6 rounded-lg shadow mb-6">
+            <h2 class="text-xl font-bold mb-4">Change Password</h2>
+            <form @submit.prevent="changePassword" class="space-y-4">
+                <div>
+                    <label class="block text-sm font-medium mb-2">Current Password</label>
+                    <input type="password" x-model="passwordForm.current" required
+                           class="w-full px-3 py-2 border rounded focus:ring-2 focus:ring-indigo-500">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium mb-2">New Password</label>
+                    <input type="password" x-model="passwordForm.new" required
+                           class="w-full px-3 py-2 border rounded focus:ring-2 focus:ring-indigo-500">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium mb-2">Confirm New Password</label>
+                    <input type="password" x-model="passwordForm.confirm" required
+                           class="w-full px-3 py-2 border rounded focus:ring-2 focus:ring-indigo-500">
+                </div>
+                <div x-show="passwordError" class="bg-red-50 text-red-600 p-3 rounded" x-text="passwordError"></div>
+                <div x-show="passwordSuccess" class="bg-green-50 text-green-600 p-3 rounded">Password changed successfully!</div>
+                <button type="submit" class="bg-indigo-600 text-white px-6 py-2 rounded hover:bg-indigo-700">
+                    Change Password
+                </button>
+            </form>
+        </div>
+
+        <!-- Data Export (GDPR) -->
+        <div class="bg-white p-6 rounded-lg shadow mb-6">
+            <h2 class="text-xl font-bold mb-4">Data Export</h2>
+            <p class="text-gray-600 mb-4">
+                Under GDPR, you have the right to export all your personal data. This includes your account information, 
+                scripts, and activity logs.
+            </p>
+            <button @click="exportData" class="bg-blue-600 text-white px-6 py-2 rounded hover:bg-blue-700">
+                Export My Data
+            </button>
+        </div>
+
+        <!-- Delete Account -->
+        <div class="bg-white p-6 rounded-lg shadow border-2 border-red-200">
+            <h2 class="text-xl font-bold mb-4 text-red-600">Danger Zone</h2>
+            <div class="bg-red-50 p-4 rounded mb-4">
+                <h3 class="font-bold mb-2">Delete Account</h3>
+                <p class="text-sm text-gray-700 mb-2">
+                    Once you delete your account, there is no going back. This will:
+                </p>
+                <ul class="text-sm text-gray-700 list-disc list-inside space-y-1">
+                    <li>Permanently delete your account and profile</li>
+                    <li>Delete all your scripts and versions</li>
+                    <li>Remove all your keys</li>
+                    <li>Revoke all share tokens</li>
+                </ul>
+            </div>
+            <button @click="showDeleteModal = true" class="bg-red-600 text-white px-6 py-2 rounded hover:bg-red-700">
+                Delete My Account
+            </button>
+        </div>
+    </div>
+
+    <!-- Delete Confirmation Modal -->
+    <div x-show="showDeleteModal" @click.away="showDeleteModal = false"
+         class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50" style="display: none;">
+        <div class="bg-white p-8 rounded-lg max-w-md w-full" @click.stop>
+            <h2 class="text-2xl font-bold mb-4 text-red-600">Confirm Account Deletion</h2>
+            <p class="text-gray-700 mb-4">
+                This action cannot be undone. All your data will be permanently deleted.
+            </p>
+            <div class="mb-4">
+                <label class="block text-sm font-medium mb-2">
+                    Type your username (<span x-text="user.username"></span>) to confirm:
+                </label>
+                <input type="text" x-model="deleteConfirm" 
+                       class="w-full px-3 py-2 border rounded focus:ring-2 focus:ring-red-500">
+            </div>
+            <div class="flex space-x-4">
+                <button @click="deleteAccount" 
+                        :disabled="deleteConfirm !== user.username"
+                        :class="deleteConfirm === user.username ? 'bg-red-600 hover:bg-red-700' : 'bg-gray-400 cursor-not-allowed'"
+                        class="text-white px-6 py-2 rounded">
+                    Delete Account
+                </button>
+                <button @click="showDeleteModal = false" class="bg-gray-300 px-6 py-2 rounded hover:bg-gray-400">
+                    Cancel
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function accountSettings() {
+    return {
+        user: {},
+        passwordForm: { current: '', new: '', confirm: '' },
+        passwordError: '',
+        passwordSuccess: false,
+        showDeleteModal: false,
+        deleteConfirm: '',
+        
+        init() {
+            if (!getToken()) {
+                window.location.href = '/login';
+                return;
+            }
+            this.user = JSON.parse(localStorage.getItem('user') || '{}');
+        },
+        
+        changePassword() {
+            this.passwordError = '';
+            this.passwordSuccess = false;
+            
+            if (this.passwordForm.new !== this.passwordForm.confirm) {
+                this.passwordError = 'New passwords do not match';
+                return;
+            }
+            
+            if (this.passwordForm.new.length < 8) {
+                this.passwordError = 'Password must be at least 8 characters';
+                return;
+            }
+            
+            // Note: This endpoint needs to be implemented in the backend
+            fetch('/api/account/password', {
+                method: 'PUT',
+                headers: {
+                    'Authorization': 'Bearer ' + getToken(),
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    current_password: this.passwordForm.current,
+                    new_password: this.passwordForm.new
+                })
+            })
+            .then(res => {
+                if (!res.ok) throw new Error('Failed to change password');
+                this.passwordSuccess = true;
+                this.passwordForm = { current: '', new: '', confirm: '' };
+            })
+            .catch(err => {
+                this.passwordError = 'Failed to change password. Check your current password.';
+            });
+        },
+        
+        exportData() {
+            // Note: This endpoint needs to be implemented in the backend
+            fetch('/api/account/export', {
+                headers: { 'Authorization': 'Bearer ' + getToken() }
+            })
+            .then(res => res.blob())
+            .then(blob => {
+                const url = window.URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = 'shebang-data-export.json';
+                a.click();
+                window.URL.revokeObjectURL(url);
+            });
+        },
+        
+        deleteAccount() {
+            if (this.deleteConfirm !== this.user.username) return;
+            
+            // Note: This endpoint needs to be implemented in the backend
+            fetch('/api/account', {
+                method: 'DELETE',
+                headers: { 'Authorization': 'Bearer ' + getToken() }
+            })
+            .then(() => {
+                localStorage.removeItem('token');
+                localStorage.removeItem('user');
+                window.location.href = '/';
+            });
+        }
+    }
+}
+</script>
+{{end}}

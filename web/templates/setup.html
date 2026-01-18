@@ -1,0 +1,138 @@
+{{define "content"}}
+<div class="max-w-2xl mx-auto" x-data="setup()" x-init="checkSetup()">
+    <div class="bg-white p-8 rounded-lg shadow">
+        <div class="text-center mb-8">
+            <h1 class="text-4xl font-bold text-indigo-600 mb-2">Welcome to shebang.run</h1>
+            <p class="text-gray-600">Let's set up your administrator account</p>
+        </div>
+
+        <div class="bg-blue-50 border border-blue-200 p-4 rounded-lg mb-6">
+            <p class="text-sm text-blue-800">
+                🎉 This is the first time shebang.run is being launched. 
+                Create your administrator account to get started.
+            </p>
+        </div>
+
+        <form @submit.prevent="createAdmin" class="space-y-6">
+            <div>
+                <label class="block text-sm font-medium mb-2">Administrator Username</label>
+                <input type="text" x-model="form.username" required 
+                       pattern="[a-z0-9-]+"
+                       class="w-full px-3 py-2 border rounded focus:ring-2 focus:ring-indigo-500"
+                       placeholder="admin">
+                <p class="text-xs text-gray-500 mt-1">Lowercase letters, numbers, and hyphens only</p>
+            </div>
+
+            <div>
+                <label class="block text-sm font-medium mb-2">Email Address</label>
+                <input type="email" x-model="form.email" required 
+                       class="w-full px-3 py-2 border rounded focus:ring-2 focus:ring-indigo-500"
+                       placeholder="admin@example.com">
+            </div>
+
+            <div>
+                <label class="block text-sm font-medium mb-2">Password</label>
+                <input type="password" x-model="form.password" required 
+                       minlength="8"
+                       class="w-full px-3 py-2 border rounded focus:ring-2 focus:ring-indigo-500"
+                       placeholder="Minimum 8 characters">
+            </div>
+
+            <div>
+                <label class="block text-sm font-medium mb-2">Confirm Password</label>
+                <input type="password" x-model="form.confirmPassword" required 
+                       class="w-full px-3 py-2 border rounded focus:ring-2 focus:ring-indigo-500">
+            </div>
+
+            <div x-show="error" class="bg-red-50 text-red-600 p-3 rounded" x-text="error"></div>
+
+            <button type="submit" 
+                    :disabled="loading"
+                    :class="loading ? 'bg-gray-400' : 'bg-indigo-600 hover:bg-indigo-700'"
+                    class="w-full text-white py-3 rounded-md font-medium">
+                <span x-show="!loading">Create Administrator Account</span>
+                <span x-show="loading">Creating...</span>
+            </button>
+        </form>
+
+        <div class="mt-6 text-center text-sm text-gray-600">
+            <p>This account will have full administrative privileges.</p>
+        </div>
+    </div>
+</div>
+
+<script>
+function setup() {
+    return {
+        form: {
+            username: '',
+            email: '',
+            password: '',
+            confirmPassword: ''
+        },
+        error: '',
+        loading: false,
+        
+        checkSetup() {
+            // Check if setup is needed
+            fetch('/api/setup/status')
+                .then(res => res.json())
+                .then(data => {
+                    if (data.setup_complete) {
+                        // Setup already done, redirect to home
+                        window.location.href = '/';
+                    }
+                })
+                .catch(() => {
+                    // If endpoint doesn't exist or errors, assume setup needed
+                });
+        },
+        
+        createAdmin() {
+            this.error = '';
+            
+            if (this.form.password !== this.form.confirmPassword) {
+                this.error = 'Passwords do not match';
+                return;
+            }
+            
+            if (this.form.password.length < 8) {
+                this.error = 'Password must be at least 8 characters';
+                return;
+            }
+            
+            this.loading = true;
+            
+            fetch('/api/auth/register', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    username: this.form.username,
+                    email: this.form.email,
+                    password: this.form.password
+                })
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.token) {
+                    localStorage.setItem('token', data.token);
+                    localStorage.setItem('user', JSON.stringify(data.user));
+                    
+                    // Show success and redirect
+                    setTimeout(() => {
+                        window.location.href = '/dashboard';
+                    }, 500);
+                } else {
+                    this.error = 'Failed to create admin account';
+                    this.loading = false;
+                }
+            })
+            .catch(err => {
+                this.error = 'Failed to create admin account: ' + err.message;
+                this.loading = false;
+            });
+        }
+    }
+}
+</script>
+{{end}}
