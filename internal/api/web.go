@@ -16,7 +16,7 @@ func NewWebHandler() *WebHandler {
 	}
 	
 	layout := filepath.Join("web", "templates", "layout.html")
-	pages := []string{"index", "login", "register", "dashboard", "keys", "account", "script-editor", "privacy", "gdpr", "setup", "docs", "admin"}
+	pages := []string{"index", "login", "register", "dashboard", "keys", "account", "script-editor", "privacy", "gdpr", "setup", "docs", "admin", "terms"}
 	
 	for _, page := range pages {
 		pagePath := filepath.Join("web", "templates", page+".html")
@@ -95,6 +95,12 @@ func (h *WebHandler) Docs(w http.ResponseWriter, r *http.Request) {
 func (h *WebHandler) Admin(w http.ResponseWriter, r *http.Request) {
 	h.render(w, "admin", map[string]interface{}{
 		"Title": "Admin Panel",
+	})
+}
+
+func (h *WebHandler) Terms(w http.ResponseWriter, r *http.Request) {
+	h.render(w, "terms", map[string]interface{}{
+		"Title": "Terms of Service",
 	})
 }
 
