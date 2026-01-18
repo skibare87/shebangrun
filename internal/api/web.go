@@ -16,7 +16,7 @@ func NewWebHandler() *WebHandler {
 	}
 	
 	layout := filepath.Join("web", "templates", "layout.html")
-	pages := []string{"index", "login", "register", "dashboard", "keys", "account", "script-editor", "privacy", "gdpr", "setup"}
+	pages := []string{"index", "login", "register", "dashboard", "keys", "account", "script-editor", "privacy", "gdpr", "setup", "docs"}
 	
 	for _, page := range pages {
 		pagePath := filepath.Join("web", "templates", page+".html")
@@ -83,6 +83,12 @@ func (h *WebHandler) GDPR(w http.ResponseWriter, r *http.Request) {
 func (h *WebHandler) Setup(w http.ResponseWriter, r *http.Request) {
 	h.render(w, "setup", map[string]interface{}{
 		"Title": "Setup",
+	})
+}
+
+func (h *WebHandler) Docs(w http.ResponseWriter, r *http.Request) {
+	h.render(w, "docs", map[string]interface{}{
+		"Title": "Documentation",
 	})
 }
 

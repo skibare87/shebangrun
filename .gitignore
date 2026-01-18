@@ -65,3 +65,6 @@ SUMMARY.md
 
 # Shell configs
 .bashrc
+
+# Build scripts
+build.sh

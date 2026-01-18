@@ -1,0 +1,347 @@
+{{define "content"}}
+<div class="max-w-4xl mx-auto">
+    <h1 class="text-4xl font-bold mb-6">Documentation</h1>
+
+    <div class="bg-blue-50 border border-blue-200 p-4 rounded-lg mb-8">
+        <p class="text-sm">
+            Welcome to shebang.run documentation. Learn how to host, share, and execute scripts with versioning and encryption.
+        </p>
+    </div>
+
+    <!-- Quick Start -->
+    <section class="mb-12">
+        <h2 class="text-2xl font-bold mb-4">Quick Start</h2>
+        
+        <div class="bg-white p-6 rounded-lg shadow mb-4">
+            <h3 class="text-xl font-bold mb-3">1. Create an Account</h3>
+            <p class="text-gray-700 mb-2">Sign up at <a href="/register" class="text-indigo-600 hover:text-indigo-700">shebang.run/register</a></p>
+        </div>
+
+        <div class="bg-white p-6 rounded-lg shadow mb-4">
+            <h3 class="text-xl font-bold mb-3">2. Create Your First Script</h3>
+            <p class="text-gray-700 mb-2">Go to your <a href="/dashboard" class="text-indigo-600 hover:text-indigo-700">Dashboard</a> and click "New Script"</p>
+            <div class="bg-gray-900 text-green-400 p-4 rounded font-mono text-sm mt-2">
+#!/bin/bash<br>
+echo "Hello from shebang.run!"
+            </div>
+        </div>
+
+        <div class="bg-white p-6 rounded-lg shadow">
+            <h3 class="text-xl font-bold mb-3">3. Use Your Script</h3>
+            <div class="bg-gray-900 text-green-400 p-4 rounded font-mono text-sm">
+curl https://shebang.run/username/scriptname | sh
+            </div>
+        </div>
+    </section>
+
+    <!-- Usage -->
+    <section class="mb-12">
+        <h2 class="text-2xl font-bold mb-4">Usage</h2>
+
+        <div class="bg-white p-6 rounded-lg shadow mb-4">
+            <h3 class="text-lg font-bold mb-2">Retrieve Scripts</h3>
+            <div class="space-y-2 font-mono text-sm">
+                <div class="bg-gray-100 p-2 rounded"># Latest version</div>
+                <div class="bg-gray-900 text-green-400 p-2 rounded">curl https://shebang.run/user/script | sh</div>
+                
+                <div class="bg-gray-100 p-2 rounded mt-4"># Specific version</div>
+                <div class="bg-gray-900 text-green-400 p-2 rounded">curl https://shebang.run/user/script@v5 | sh</div>
+                
+                <div class="bg-gray-100 p-2 rounded mt-4"># Tagged version</div>
+                <div class="bg-gray-900 text-green-400 p-2 rounded">curl https://shebang.run/user/script@dev | sh</div>
+            </div>
+        </div>
+
+        <div class="bg-white p-6 rounded-lg shadow mb-4">
+            <h3 class="text-lg font-bold mb-2">Get Metadata</h3>
+            <div class="bg-gray-900 text-green-400 p-4 rounded font-mono text-sm">
+curl https://shebang.run/user/script/meta
+            </div>
+            <p class="text-sm text-gray-600 mt-2">Returns JSON with version, checksum, size, and timestamps</p>
+        </div>
+
+        <div class="bg-white p-6 rounded-lg shadow">
+            <h3 class="text-lg font-bold mb-2">Verify Signature</h3>
+            <div class="bg-gray-900 text-green-400 p-4 rounded font-mono text-sm">
+curl https://shebang.run/user/script/verify
+            </div>
+            <p class="text-sm text-gray-600 mt-2">Check if script is signed and verified</p>
+        </div>
+    </section>
+
+    <!-- Python Library -->
+    <section class="mb-12">
+        <h2 class="text-2xl font-bold mb-4">Python Library</h2>
+        
+        <div class="bg-white p-6 rounded-lg shadow">
+            <h3 class="text-lg font-bold mb-3">Installation</h3>
+            <div class="bg-gray-900 text-green-400 p-4 rounded font-mono text-sm mb-4">
+pip install shebangrun
+            </div>
+
+            <h3 class="text-lg font-bold mb-3">Basic Usage</h3>
+            <pre class="bg-gray-100 p-4 rounded text-sm overflow-x-auto">from shebangrun import run
+
+# Fetch a script
+content = run(username="user", script="myscript")
+
+# Execute with confirmation
+run(username="user", script="myscript", eval=True)
+
+# Execute without confirmation (use with caution!)
+run(username="user", script="myscript", eval=True, accept=True)
+
+# Decrypt encrypted script
+content = run(
+    username="user", 
+    script="private",
+    key=open("private.pem").read()
+)</pre>
+
+            <p class="mt-4">
+                <a href="https://pypi.org/project/shebangrun/" class="text-indigo-600 hover:text-indigo-700">View on PyPI →</a>
+            </p>
+        </div>
+    </section>
+
+    <!-- Features -->
+    <section class="mb-12">
+        <h2 class="text-2xl font-bold mb-4">Features</h2>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div class="bg-white p-6 rounded-lg shadow">
+                <h3 class="text-lg font-bold mb-2">📦 Versioning</h3>
+                <p class="text-gray-700 text-sm">Auto-incrementing versions with immutable history. Access any version with @v1, @v2, etc.</p>
+            </div>
+
+            <div class="bg-white p-6 rounded-lg shadow">
+                <h3 class="text-lg font-bold mb-2">🔐 Encryption</h3>
+                <p class="text-gray-700 text-sm">End-to-end encryption with RSA-4096 and ChaCha20-Poly1305. Your private keys never leave your device.</p>
+            </div>
+
+            <div class="bg-white p-6 rounded-lg shadow">
+                <h3 class="text-lg font-bold mb-2">🏷️ Tags</h3>
+                <p class="text-gray-700 text-sm">Tag versions as @latest, @dev, or @beta for easy reference and deployment workflows.</p>
+            </div>
+
+            <div class="bg-white p-6 rounded-lg shadow">
+                <h3 class="text-lg font-bold mb-2">👥 Sharing</h3>
+                <p class="text-gray-700 text-sm">Public, unlisted, or private scripts. Share private scripts with revocable tokens.</p>
+            </div>
+
+            <div class="bg-white p-6 rounded-lg shadow">
+                <h3 class="text-lg font-bold mb-2">🔑 Key Management</h3>
+                <p class="text-gray-700 text-sm">Generate or import RSA keypairs for signing and encrypting your scripts.</p>
+            </div>
+
+            <div class="bg-white p-6 rounded-lg shadow">
+                <h3 class="text-lg font-bold mb-2">⚡ Rate Limiting</h3>
+                <p class="text-gray-700 text-sm">Configurable per-user rate limits to prevent abuse while ensuring availability.</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- API Reference -->
+    <section class="mb-12">
+        <h2 class="text-2xl font-bold mb-4">API Reference</h2>
+
+        <div class="bg-white p-6 rounded-lg shadow">
+            <h3 class="text-lg font-bold mb-3">Public Endpoints</h3>
+            <div class="space-y-3 text-sm">
+                <div>
+                    <code class="bg-gray-100 px-2 py-1 rounded">GET /{username}/{script}[@tag]</code>
+                    <p class="text-gray-600 ml-2">Retrieve script content</p>
+                </div>
+                <div>
+                    <code class="bg-gray-100 px-2 py-1 rounded">GET /{username}/{script}/meta</code>
+                    <p class="text-gray-600 ml-2">Get script metadata (JSON)</p>
+                </div>
+                <div>
+                    <code class="bg-gray-100 px-2 py-1 rounded">GET /{username}/{script}/verify</code>
+                    <p class="text-gray-600 ml-2">Verify script signature</p>
+                </div>
+            </div>
+
+            <h3 class="text-lg font-bold mb-3 mt-6">Authentication</h3>
+            <div class="space-y-3 text-sm">
+                <div>
+                    <code class="bg-gray-100 px-2 py-1 rounded">POST /api/auth/register</code>
+                    <p class="text-gray-600 ml-2">Register new user</p>
+                </div>
+                <div>
+                    <code class="bg-gray-100 px-2 py-1 rounded">POST /api/auth/login</code>
+                    <p class="text-gray-600 ml-2">Login and get JWT token</p>
+                </div>
+                <div>
+                    <code class="bg-gray-100 px-2 py-1 rounded">GET /api/auth/oauth/{provider}</code>
+                    <p class="text-gray-600 ml-2">OAuth login (github, google)</p>
+                </div>
+            </div>
+
+            <h3 class="text-lg font-bold mb-3 mt-6">Script Management (Authenticated)</h3>
+            <div class="space-y-3 text-sm">
+                <div>
+                    <code class="bg-gray-100 px-2 py-1 rounded">GET /api/scripts</code>
+                    <p class="text-gray-600 ml-2">List your scripts</p>
+                </div>
+                <div>
+                    <code class="bg-gray-100 px-2 py-1 rounded">POST /api/scripts</code>
+                    <p class="text-gray-600 ml-2">Create new script</p>
+                </div>
+                <div>
+                    <code class="bg-gray-100 px-2 py-1 rounded">PUT /api/scripts/{id}</code>
+                    <p class="text-gray-600 ml-2">Update script (creates new version)</p>
+                </div>
+                <div>
+                    <code class="bg-gray-100 px-2 py-1 rounded">DELETE /api/scripts/{id}</code>
+                    <p class="text-gray-600 ml-2">Delete script</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Encryption -->
+    <section class="mb-12">
+        <h2 class="text-2xl font-bold mb-4">Encryption</h2>
+
+        <div class="bg-white p-6 rounded-lg shadow">
+            <h3 class="text-lg font-bold mb-3">How It Works</h3>
+            <ol class="list-decimal list-inside space-y-2 text-gray-700">
+                <li>Generate or import an RSA-4096 keypair</li>
+                <li>Create a private script and select your key</li>
+                <li>Content is encrypted with ChaCha20-Poly1305</li>
+                <li>Encryption key is wrapped with your RSA public key</li>
+                <li>Only you can decrypt with your private key</li>
+            </ol>
+
+            <div class="bg-yellow-50 border border-yellow-200 p-4 rounded mt-4">
+                <p class="text-sm text-yellow-800">
+                    ⚠️ <strong>Important:</strong> Your private key is never stored on our servers. 
+                    Download it immediately after generation and store it securely.
+                </p>
+            </div>
+
+            <h3 class="text-lg font-bold mb-3 mt-6">Decryption</h3>
+            <p class="text-gray-700 mb-2">Use the Python library to decrypt:</p>
+            <pre class="bg-gray-100 p-4 rounded text-sm">from shebangrun import run
+
+content = run(
+    username="user",
+    script="encrypted-script",
+    key=open("private.pem").read()
+)
+print(content)</pre>
+        </div>
+    </section>
+
+    <!-- Self-Hosting -->
+    <section class="mb-12">
+        <h2 class="text-2xl font-bold mb-4">Self-Hosting</h2>
+
+        <div class="bg-white p-6 rounded-lg shadow">
+            <h3 class="text-lg font-bold mb-3">Docker Deployment</h3>
+            <pre class="bg-gray-900 text-green-400 p-4 rounded text-sm">git clone https://github.com/skibare87/shebangrun.git
+cd shebangrun
+
+# Configure environment
+export JWT_SECRET="your-secret-key"
+export GITHUB_CLIENT_ID="your-github-id"
+export GITHUB_CLIENT_SECRET="your-github-secret"
+
+# Start the stack
+docker-compose up -d</pre>
+
+            <p class="text-gray-700 mt-4">
+                See <a href="https://github.com/skibare87/shebangrun" class="text-indigo-600 hover:text-indigo-700">GitHub repository</a> for complete deployment instructions.
+            </p>
+        </div>
+    </section>
+
+    <!-- Examples -->
+    <section class="mb-12">
+        <h2 class="text-2xl font-bold mb-4">Examples</h2>
+
+        <div class="space-y-4">
+            <div class="bg-white p-6 rounded-lg shadow">
+                <h3 class="text-lg font-bold mb-2">Deployment Script</h3>
+                <pre class="bg-gray-100 p-4 rounded text-sm">#!/bin/bash
+# Save as: deploy.sh
+
+git pull origin main
+docker-compose down
+docker-compose up -d --build
+echo "Deployment complete!"</pre>
+                <p class="text-sm text-gray-600 mt-2">Use: <code class="bg-gray-100 px-2 py-1 rounded">curl https://shebang.run/user/deploy | sh</code></p>
+            </div>
+
+            <div class="bg-white p-6 rounded-lg shadow">
+                <h3 class="text-lg font-bold mb-2">Python Automation</h3>
+                <pre class="bg-gray-100 p-4 rounded text-sm">#!/usr/bin/env python3
+import os
+import sys
+
+print(f"Running on: {sys.platform}")
+print(f"Python version: {sys.version}")
+
+# Your automation code here</pre>
+                <p class="text-sm text-gray-600 mt-2">Execute: <code class="bg-gray-100 px-2 py-1 rounded">python3 -c "from shebangrun import run; run('user', 'script', eval=True, accept=True)"</code></p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Security -->
+    <section class="mb-12">
+        <h2 class="text-2xl font-bold mb-4">Security</h2>
+
+        <div class="bg-white p-6 rounded-lg shadow">
+            <h3 class="text-lg font-bold mb-3">Best Practices</h3>
+            <ul class="list-disc list-inside space-y-2 text-gray-700">
+                <li>Always review scripts before executing with <code class="bg-gray-100 px-2 py-1 rounded">eval=True</code></li>
+                <li>Use <code class="bg-gray-100 px-2 py-1 rounded">accept=False</code> to see scripts before execution</li>
+                <li>Store private keys securely, never commit to version control</li>
+                <li>Use environment variables for tokens and credentials</li>
+                <li>Verify script checksums when security is critical</li>
+                <li>Use encryption for sensitive scripts</li>
+            </ul>
+
+            <h3 class="text-lg font-bold mb-3 mt-6">Algorithms</h3>
+            <ul class="list-disc list-inside space-y-1 text-gray-700 text-sm">
+                <li><strong>Password Hashing:</strong> bcrypt</li>
+                <li><strong>Authentication:</strong> JWT with HS256</li>
+                <li><strong>Key Generation:</strong> RSA-4096</li>
+                <li><strong>Key Wrapping:</strong> RSA-OAEP with SHA-256</li>
+                <li><strong>Content Encryption:</strong> XChaCha20-Poly1305</li>
+                <li><strong>Checksums:</strong> SHA-256</li>
+            </ul>
+        </div>
+    </section>
+
+    <!-- Support -->
+    <section class="mb-12">
+        <h2 class="text-2xl font-bold mb-4">Support</h2>
+
+        <div class="bg-white p-6 rounded-lg shadow">
+            <div class="space-y-4">
+                <div>
+                    <h3 class="font-bold">GitHub</h3>
+                    <a href="https://github.com/skibare87/shebangrun" class="text-indigo-600 hover:text-indigo-700">
+                        github.com/skibare87/shebangrun
+                    </a>
+                </div>
+                <div>
+                    <h3 class="font-bold">Python Package</h3>
+                    <a href="https://pypi.org/project/shebangrun/" class="text-indigo-600 hover:text-indigo-700">
+                        pypi.org/project/shebangrun
+                    </a>
+                </div>
+                <div>
+                    <h3 class="font-bold">Issues & Questions</h3>
+                    <a href="https://github.com/skibare87/shebangrun/issues" class="text-indigo-600 hover:text-indigo-700">
+                        Report an issue on GitHub
+                    </a>
+                </div>
+            </div>
+        </div>
+    </section>
+</div>
+{{end}}
