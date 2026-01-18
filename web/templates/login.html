@@ -1,5 +1,5 @@
 {{define "content"}}
-<div class="max-w-md mx-auto" x-data="{ error: '', username: '', password: '' }">
+<div class="max-w-md mx-auto" x-data="{ error: '', username: '', password: '' }" x-init="checkOAuthToken()">
     <div class="bg-white p-8 rounded-lg shadow">
         <h2 class="text-2xl font-bold mb-6">Login</h2>
         
@@ -34,8 +34,33 @@
 </div>
 
 <script>
+function checkOAuthToken() {
+    const params = new URLSearchParams(window.location.search);
+    const token = params.get('oauth_token');
+    const username = params.get('user');
+    
+    if (token) {
+        localStorage.setItem('token', token);
+        // Fetch user info to store
+        fetch('/api/admin/users', {
+            headers: { 'Authorization': 'Bearer ' + token }
+        })
+        .then(res => res.json())
+        .then(users => {
+            const user = users.find(u => u.username === username);
+            if (user) {
+                localStorage.setItem('user', JSON.stringify(user));
+            }
+            window.location.href = '/dashboard';
+        })
+        .catch(() => {
+            // Fallback: just redirect with token
+            window.location.href = '/dashboard';
+        });
+    }
+}
+
 function login() {
-    const data = Alpine.store || window.Alpine?.$data || {};
     const username = document.querySelector('[x-model="username"]').value;
     const password = document.querySelector('[x-model="password"]').value;
     

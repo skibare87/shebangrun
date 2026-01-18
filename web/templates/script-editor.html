@@ -182,7 +182,10 @@ function scriptEditor() {
             fetch('/api/scripts/' + this.scriptId, {
                 headers: { 'Authorization': 'Bearer ' + getToken() }
             })
-            .then(res => res.json())
+            .then(res => {
+                if (!res.ok) throw new Error('Failed to load script');
+                return res.json();
+            })
             .then(data => {
                 this.script = {
                     name: data.name,
@@ -216,6 +219,11 @@ function scriptEditor() {
                 }
                 
                 // Always init editor after load completes
+                setTimeout(() => this.initEditor(), 200);
+            })
+            .catch(err => {
+                console.error('Error loading script:', err);
+                // Still init editor even if load fails
                 setTimeout(() => this.initEditor(), 200);
             });
         },

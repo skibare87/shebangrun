@@ -2,6 +2,7 @@ package api
 
 import (
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"strings"
 
@@ -136,11 +137,22 @@ func (h *AuthHandler) Login(w http.ResponseWriter, r *http.Request) {
 
 func (h *AuthHandler) OAuthLogin(w http.ResponseWriter, r *http.Request, provider string) {
 	var p *auth.OAuthProvider
+	var callbackPath string
+	
 	switch provider {
 	case "github":
-		p = h.github
+		callbackPath = "/api/auth/oauth/github/callback"
+		if h.github != nil {
+			// Update redirect URL based on request
+			redirectURL := buildRedirectURL(r, callbackPath)
+			p = auth.NewGitHubProvider(h.cfg.GitHubClientID, h.cfg.GitHubClientSecret, redirectURL)
+		}
 	case "google":
-		p = h.google
+		callbackPath = "/api/auth/oauth/google/callback"
+		if h.google != nil {
+			redirectURL := buildRedirectURL(r, callbackPath)
+			p = auth.NewGoogleProvider(h.cfg.GoogleClientID, h.cfg.GoogleClientSecret, redirectURL)
+		}
 	default:
 		http.Error(w, "Unknown provider", http.StatusBadRequest)
 		return
@@ -158,11 +170,21 @@ func (h *AuthHandler) OAuthLogin(w http.ResponseWriter, r *http.Request, provide
 
 func (h *AuthHandler) OAuthCallback(w http.ResponseWriter, r *http.Request, provider string) {
 	var p *auth.OAuthProvider
+	var callbackPath string
+	
 	switch provider {
 	case "github":
-		p = h.github
+		callbackPath = "/api/auth/oauth/github/callback"
+		if h.github != nil {
+			redirectURL := buildRedirectURL(r, callbackPath)
+			p = auth.NewGitHubProvider(h.cfg.GitHubClientID, h.cfg.GitHubClientSecret, redirectURL)
+		}
 	case "google":
-		p = h.google
+		callbackPath = "/api/auth/oauth/google/callback"
+		if h.google != nil {
+			redirectURL := buildRedirectURL(r, callbackPath)
+			p = auth.NewGoogleProvider(h.cfg.GoogleClientID, h.cfg.GoogleClientSecret, redirectURL)
+		}
 	default:
 		http.Error(w, "Unknown provider", http.StatusBadRequest)
 		return
@@ -182,7 +204,7 @@ func (h *AuthHandler) OAuthCallback(w http.ResponseWriter, r *http.Request, prov
 
 	oauthUser, err := p.GetUserInfo(r.Context(), token)
 	if err != nil {
-		http.Error(w, "Failed to get user info", http.StatusInternalServerError)
+		http.Error(w, fmt.Sprintf("Failed to get user info: %v", err), http.StatusInternalServerError)
 		return
 	}
 
@@ -206,14 +228,41 @@ func (h *AuthHandler) OAuthCallback(w http.ResponseWriter, r *http.Request, prov
 		return
 	}
 
-	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(AuthResponse{
-		Token: jwtToken,
-		User: map[string]interface{}{
-			"id":       user.ID,
-			"username": user.Username,
-			"email":    user.Email,
-			"is_admin": user.IsAdmin,
-		},
-	})
+	// Create HTML page that stores token and redirects
+	html := fmt.Sprintf(`
+<!DOCTYPE html>
+<html>
+<head><title>Login Success</title></head>
+<body>
+<script>
+localStorage.setItem('token', '%s');
+localStorage.setItem('user', JSON.stringify({
+	id: %d,
+	username: '%s',
+	email: '%s',
+	is_admin: %t
+}));
+window.location.href = '/dashboard';
+</script>
+<p>Logging in...</p>
+</body>
+</html>
+`, jwtToken, user.ID, user.Username, user.Email, user.IsAdmin)
+
+	w.Header().Set("Content-Type", "text/html")
+	w.Write([]byte(html))
+}
+
+
+func buildRedirectURL(r *http.Request, path string) string {
+	scheme := "https"
+	if r.TLS == nil {
+		scheme = "http"
+	}
+	// Check X-Forwarded-Proto header from reverse proxy
+	if proto := r.Header.Get("X-Forwarded-Proto"); proto != "" {
+		scheme = proto
+	}
+	host := r.Host
+	return scheme + "://" + host + path
 }

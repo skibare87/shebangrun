@@ -5,8 +5,10 @@ import (
 	"net/http"
 	"strconv"
 
+	"shebang.run/internal/auth"
 	"shebang.run/internal/config"
 	"shebang.run/internal/database"
+	"shebang.run/internal/middleware"
 
 	"github.com/go-chi/chi/v5"
 )
@@ -122,4 +124,61 @@ func (h *AdminHandler) GetConfig(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(response)
+}
+
+func (h *AdminHandler) ResetUserPassword(w http.ResponseWriter, r *http.Request) {
+	idStr := chi.URLParam(r, "id")
+	userID, err := strconv.ParseInt(idStr, 10, 64)
+	if err != nil {
+		http.Error(w, "Invalid user ID", http.StatusBadRequest)
+		return
+	}
+
+	var req struct {
+		NewPassword string `json:"new_password"`
+	}
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		http.Error(w, "Invalid request", http.StatusBadRequest)
+		return
+	}
+
+	hash, err := auth.HashPassword(req.NewPassword)
+	if err != nil {
+		http.Error(w, "Failed to hash password", http.StatusInternalServerError)
+		return
+	}
+
+	_, err = h.db.Exec("UPDATE users SET password_hash = ? WHERE id = ?", hash, userID)
+	if err != nil {
+		http.Error(w, "Failed to reset password", http.StatusInternalServerError)
+		return
+	}
+
+	w.WriteHeader(http.StatusOK)
+	w.Write([]byte(`{"status":"ok"}`))
+}
+
+func (h *AdminHandler) DeleteUser(w http.ResponseWriter, r *http.Request) {
+	idStr := chi.URLParam(r, "id")
+	userID, err := strconv.ParseInt(idStr, 10, 64)
+	if err != nil {
+		http.Error(w, "Invalid user ID", http.StatusBadRequest)
+		return
+	}
+
+	// Don't allow deleting yourself
+	claims, _ := middleware.GetUserFromContext(r.Context())
+	if claims.UserID == userID {
+		http.Error(w, "Cannot delete your own account", http.StatusForbidden)
+		return
+	}
+
+	_, err = h.db.Exec("DELETE FROM users WHERE id = ?", userID)
+	if err != nil {
+		http.Error(w, "Failed to delete user", http.StatusInternalServerError)
+		return
+	}
+
+	w.WriteHeader(http.StatusOK)
+	w.Write([]byte(`{"status":"ok"}`))
 }

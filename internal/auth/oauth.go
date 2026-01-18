@@ -52,10 +52,35 @@ func (p *OAuthProvider) Exchange(ctx context.Context, code string) (*oauth2.Toke
 }
 
 type OAuthUser struct {
-	ID       string `json:"id"`
+	ID       string `json:"-"` // Custom unmarshal
 	Email    string `json:"email"`
-	Username string `json:"login"`
+	Username string `json:"login"` // GitHub uses "login"
 	Name     string `json:"name"`
+	RawID    interface{} `json:"id"` // Can be string or number
+}
+
+func (u *OAuthUser) UnmarshalJSON(data []byte) error {
+	type Alias OAuthUser
+	aux := &struct {
+		*Alias
+	}{
+		Alias: (*Alias)(u),
+	}
+	if err := json.Unmarshal(data, &aux); err != nil {
+		return err
+	}
+	
+	// Convert RawID to string
+	switch v := u.RawID.(type) {
+	case string:
+		u.ID = v
+	case float64:
+		u.ID = fmt.Sprintf("%.0f", v)
+	case int:
+		u.ID = fmt.Sprintf("%d", v)
+	}
+	
+	return nil
 }
 
 func (p *OAuthProvider) GetUserInfo(ctx context.Context, token *oauth2.Token) (*OAuthUser, error) {
@@ -74,6 +99,29 @@ func (p *OAuthProvider) GetUserInfo(ctx context.Context, token *oauth2.Token) (*
 	var user OAuthUser
 	if err := json.NewDecoder(resp.Body).Decode(&user); err != nil {
 		return nil, err
+	}
+	
+	// If email is empty (GitHub private email), fetch from emails API
+	if user.Email == "" && p.userInfoURL == "https://api.github.com/user" {
+		emailResp, err := client.Get("https://api.github.com/user/emails")
+		if err == nil {
+			defer emailResp.Body.Close()
+			var emails []struct {
+				Email   string `json:"email"`
+				Primary bool   `json:"primary"`
+			}
+			if json.NewDecoder(emailResp.Body).Decode(&emails) == nil {
+				for _, e := range emails {
+					if e.Primary {
+						user.Email = e.Email
+						break
+					}
+				}
+				if user.Email == "" && len(emails) > 0 {
+					user.Email = emails[0].Email
+				}
+			}
+		}
 	}
 	
 	return &user, nil

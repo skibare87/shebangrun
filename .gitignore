@@ -62,9 +62,13 @@ SUMMARY.md
 *.json
 !pyproject.toml
 !package.json
+!manifest.json
 
 # Shell configs
 .bashrc
 
 # Build scripts
 build.sh
+
+# Test files with secrets
+docker-compose.test.yml

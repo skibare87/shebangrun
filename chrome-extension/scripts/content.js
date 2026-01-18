@@ -4,8 +4,8 @@
 (function() {
   'use strict';
   
-  // Check if we're on the script editor page
-  if (window.location.pathname === '/script-editor') {
+  // Check if we're on the script editor page with an ID (editing existing script)
+  if (window.location.pathname === '/script-editor' && window.location.search.includes('id=')) {
     initScriptEditor();
   }
   
@@ -48,28 +48,19 @@
     console.log('[shebang.run] Checking if script is encrypted...');
     
     // Wait for Alpine.js to initialize
-    await new Promise(resolve => setTimeout(resolve, 1500));
+    await new Promise(resolve => setTimeout(resolve, 1000));
     
-    // Check if decryption UI is visible
-    const decryptSection = document.querySelector('textarea[x-model="privateKey"]');
-    console.log('[shebang.run] Decrypt textarea found:', !!decryptSection);
-    
-    if (!decryptSection) return false;
-    
-    // Check Alpine.js data
-    const editorEl = document.querySelector('[x-data*="scriptEditor"]');
-    console.log('[shebang.run] Editor element found:', !!editorEl);
-    
-    if (editorEl && editorEl.__x) {
-      const needsDecryption = editorEl.__x.$data.needsDecryption;
-      console.log('[shebang.run] needsDecryption:', needsDecryption);
-      return needsDecryption === true;
-    }
-    
-    // Fallback: check if decrypt button exists
+    // Check if decrypt button exists and is visible
     const decryptBtn = document.querySelector('button[\\@click="decryptScript"]');
     console.log('[shebang.run] Decrypt button found:', !!decryptBtn);
-    return !!decryptBtn;
+    
+    if (!decryptBtn) return false;
+    
+    // Check if it's actually visible (not hidden by x-show)
+    const isVisible = decryptBtn.offsetParent !== null;
+    console.log('[shebang.run] Decrypt button visible:', isVisible);
+    
+    return isVisible;
   }
   
   async function autoDecrypt(key) {
