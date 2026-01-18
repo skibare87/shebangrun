@@ -25,17 +25,34 @@ const ShebangCrypto = {
     },
 
     async unwrapKey(wrappedKeyArray, privateKey) {
-        const wrappedKeyBuffer = wrappedKeyArray instanceof Uint8Array 
-            ? wrappedKeyArray 
-            : new Uint8Array(wrappedKeyArray);
+        // Convert to Uint8Array properly
+        let wrappedKeyBuffer;
         
-        const unwrappedKey = await window.crypto.subtle.decrypt(
-            { name: "RSA-OAEP" },
-            privateKey,
-            wrappedKeyBuffer
-        );
+        if (wrappedKeyArray instanceof Uint8Array) {
+            wrappedKeyBuffer = wrappedKeyArray;
+        } else if (Array.isArray(wrappedKeyArray)) {
+            wrappedKeyBuffer = new Uint8Array(wrappedKeyArray);
+        } else if (typeof wrappedKeyArray === 'object' && wrappedKeyArray.data) {
+            // Handle {type: 'Buffer', data: [...]} format
+            wrappedKeyBuffer = new Uint8Array(wrappedKeyArray.data);
+        } else {
+            throw new Error('Invalid wrapped key format');
+        }
         
-        return new Uint8Array(unwrappedKey);
+        console.log('Unwrapping key, buffer length:', wrappedKeyBuffer.length);
+        
+        try {
+            const unwrappedKey = await window.crypto.subtle.decrypt(
+                { name: "RSA-OAEP" },
+                privateKey,
+                wrappedKeyBuffer
+            );
+            
+            return new Uint8Array(unwrappedKey);
+        } catch (e) {
+            console.error('RSA decrypt error:', e);
+            throw new Error('Failed to unwrap key. Wrong private key or corrupted data.');
+        }
     },
 
     async decryptContent(encryptedDataArray, symmetricKey) {
@@ -61,6 +78,7 @@ const ShebangCrypto = {
             
             return this.arrayBufferToString(decrypted);
         } catch (e) {
+            console.error('Sodium decrypt error:', e);
             throw new Error("Decryption failed. Wrong key or corrupted data.");
         }
     },

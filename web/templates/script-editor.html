@@ -248,33 +248,73 @@ function scriptEditor() {
             .then(res => res.json())
             .then(async (data) => {
                 try {
+                    console.log('Wrapped key type:', typeof data.wrapped_key);
+                    console.log('Wrapped key length:', data.wrapped_key ? data.wrapped_key.length : 0);
+                    
                     // Import private key
                     const cryptoKey = await ShebangCrypto.importPrivateKey(this.privateKey);
+                    console.log('Private key imported');
+                    
+                    // Convert base64 string to bytes (JSON encodes []byte as base64)
+                    let wrappedKeyBytes;
+                    if (typeof data.wrapped_key === 'string') {
+                        wrappedKeyBytes = ShebangCrypto.base64ToArrayBuffer(data.wrapped_key);
+                        wrappedKeyBytes = new Uint8Array(wrappedKeyBytes);
+                    } else if (Array.isArray(data.wrapped_key)) {
+                        wrappedKeyBytes = new Uint8Array(data.wrapped_key);
+                    } else {
+                        wrappedKeyBytes = data.wrapped_key;
+                    }
+                    
+                    console.log('Wrapped key bytes:', wrappedKeyBytes.length);
+                    
+                    // Convert encrypted content
+                    let encryptedBytes;
+                    if (typeof data.encrypted_content === 'string') {
+                        encryptedBytes = ShebangCrypto.base64ToArrayBuffer(data.encrypted_content);
+                        encryptedBytes = new Uint8Array(encryptedBytes);
+                    } else if (Array.isArray(data.encrypted_content)) {
+                        encryptedBytes = new Uint8Array(data.encrypted_content);
+                    } else {
+                        encryptedBytes = data.encrypted_content;
+                    }
                     
                     // Unwrap (decrypt) the symmetric key
-                    const symmetricKey = await ShebangCrypto.unwrapKey(data.wrapped_key, cryptoKey);
+                    const symmetricKey = await ShebangCrypto.unwrapKey(wrappedKeyBytes, cryptoKey);
+                    console.log('Symmetric key unwrapped:', symmetricKey.length, 'bytes');
                     
                     // Decrypt the content
                     const decryptedContent = await ShebangCrypto.decryptContent(
-                        data.encrypted_content,
+                        encryptedBytes,
                         symmetricKey
                     );
+                    console.log('Content decrypted');
                     
                     // Set the decrypted content
                     this.script.content = decryptedContent;
+                    
+                    // Destroy and recreate editor to fix state
                     if (this.editor) {
-                        this.editor.setValue(decryptedContent);
+                        this.editor.toTextArea();
+                        this.editor = null;
                     }
+                    
+                    // Reinitialize editor with decrypted content
+                    setTimeout(() => {
+                        this.initEditor();
+                    }, 100);
                     
                     // Clear the decryption flag
                     this.needsDecryption = false;
                     this.privateKey = ''; // Clear private key from memory
                     
                 } catch (err) {
+                    console.error('Decryption error:', err);
                     this.error = 'Decryption failed: ' + err.message;
                 }
             })
             .catch(err => {
+                console.error('Fetch error:', err);
                 this.error = 'Failed to fetch encrypted content: ' + err.message;
             });
         },
