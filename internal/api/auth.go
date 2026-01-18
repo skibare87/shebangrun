@@ -210,15 +210,33 @@ func (h *AuthHandler) OAuthCallback(w http.ResponseWriter, r *http.Request, prov
 
 	user, err := h.db.GetUserByOAuth(provider, oauthUser.ID)
 	if err != nil {
-		isFirst, _ := h.db.IsFirstUser()
-		username := oauthUser.Username
-		if username == "" {
-			username = strings.Split(oauthUser.Email, "@")[0]
-		}
-		user, err = h.db.CreateUser(username, oauthUser.Email, "", provider, oauthUser.ID, isFirst)
-		if err != nil {
-			http.Error(w, "Failed to create user", http.StatusInternalServerError)
-			return
+		// Check if user exists with this email
+		existingUser, emailErr := h.db.GetUserByEmail(oauthUser.Email)
+		if emailErr == nil {
+			// User exists with this email, log them in
+			// This allows linking OAuth to existing password accounts
+			user = existingUser
+		} else {
+			// Create new user
+			isFirst, _ := h.db.IsFirstUser()
+			username := oauthUser.Username
+			if username == "" {
+				username = strings.Split(oauthUser.Email, "@")[0]
+			}
+			
+			// Try to create user, handle duplicate username
+			user, err = h.db.CreateUser(username, oauthUser.Email, "", provider, oauthUser.ID, isFirst)
+			if err != nil {
+				// If username exists, try with provider suffix
+				if strings.Contains(err.Error(), "Duplicate") && strings.Contains(err.Error(), "username") {
+					username = username + "_" + provider
+					user, err = h.db.CreateUser(username, oauthUser.Email, "", provider, oauthUser.ID, isFirst)
+				}
+				if err != nil {
+					http.Error(w, fmt.Sprintf("Failed to create user: %v", err), http.StatusInternalServerError)
+					return
+				}
+			}
 		}
 	}
 
