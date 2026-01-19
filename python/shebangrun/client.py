@@ -219,6 +219,13 @@ class ShebangClient:
         url = f"{self.base_url}/api/account"
         response = self.session.delete(url)
         response.raise_for_status()
+    
+    def create_api_token(self, name: str) -> dict:
+        """Create API token for CLI access"""
+        url = f"{self.base_url}/api/account/tokens"
+        response = self.session.post(url, json={"name": name})
+        response.raise_for_status()
+        return response.json()
 
 
 def run(username: str, script: str, key: Optional[str] = None, 

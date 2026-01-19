@@ -18,6 +18,9 @@ WORKDIR /root/
 
 COPY --from=builder /app/server .
 COPY --from=builder /app/web ./web
+COPY --from=builder /app/cli/shebang /usr/local/bin/shebang
+
+RUN chmod +x /usr/local/bin/shebang
 
 EXPOSE 8080
 

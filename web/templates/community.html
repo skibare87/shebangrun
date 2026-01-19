@@ -1,0 +1,187 @@
+{{define "content"}}
+<div x-data="community()" x-init="init()">
+    <div class="mb-6">
+        <h1 class="text-3xl font-bold mb-2">Community Scripts</h1>
+        <p class="text-gray-600">Browse and discover public scripts from the community</p>
+    </div>
+
+    <!-- Search -->
+    <div class="bg-white p-4 rounded-lg shadow mb-6">
+        <input type="text" x-model="searchQuery" 
+               placeholder="Search public scripts by name, description, or content..."
+               class="w-full px-3 py-2 border rounded focus:ring-2 focus:ring-indigo-500">
+        <div class="mt-2 text-sm text-gray-600" x-text="`Showing ${filteredScripts.length} public scripts`"></div>
+    </div>
+
+    <div x-show="loading" class="text-center py-12 bg-white rounded-lg shadow">
+        <p class="text-gray-600">Loading scripts...</p>
+    </div>
+
+    <div x-show="!loading && scripts.length === 0" class="text-center py-12 bg-white rounded-lg shadow">
+        <p class="text-gray-600">No public scripts available yet.</p>
+    </div>
+
+    <div x-show="!loading && scripts.length > 0 && filteredScripts.length === 0" class="text-center py-12 bg-white rounded-lg shadow">
+        <p class="text-gray-600">No scripts match your search.</p>
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        <template x-for="script in filteredScripts" :key="script.id">
+            <div class="bg-white p-6 rounded-lg shadow hover:shadow-lg transition">
+                <div class="flex justify-between items-start mb-2">
+                    <h3 class="text-xl font-bold" x-text="script.name"></h3>
+                    <span class="text-xs px-2 py-1 rounded bg-green-100 text-green-800">public</span>
+                </div>
+                <p class="text-sm text-gray-600 mb-1">by <span class="font-medium" x-text="script.username"></span></p>
+                <p class="text-gray-600 mb-2 text-sm" x-text="script.description || 'No description'"></p>
+                <div class="flex items-center space-x-2 text-sm text-gray-500 mb-4">
+                    <span x-text="'v' + script.version"></span>
+                    <span>•</span>
+                    <span x-text="new Date(script.updated_at).toLocaleDateString()"></span>
+                </div>
+                <div class="flex flex-wrap gap-2">
+                    <button @click="viewScript(script)" class="text-blue-600 hover:text-blue-700 text-sm">View</button>
+                    <button @click="copyUrl(script)" class="text-green-600 hover:text-green-700 text-sm">Copy URL</button>
+                </div>
+            </div>
+        </template>
+    </div>
+
+    <!-- Toast notification -->
+    <div x-show="showToast" x-transition 
+         class="fixed top-4 right-4 bg-green-600 text-white px-6 py-3 rounded-lg shadow-lg z-50"
+         style="display: none;">
+        <span x-text="toastMessage"></span>
+    </div>
+
+    <!-- View Modal -->
+    <div x-show="viewModal" @click.away="viewModal = false" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50" style="display: none;">
+        <div class="bg-white p-8 rounded-lg max-w-4xl w-full max-h-screen overflow-y-auto" @click.stop>
+            <div class="flex justify-between items-start mb-4">
+                <div>
+                    <h2 class="text-2xl font-bold" x-text="currentScript?.name"></h2>
+                    <p class="text-sm text-gray-600">by <span x-text="currentScript?.username"></span></p>
+                    <p class="text-gray-600 mt-1" x-text="currentScript?.description"></p>
+                </div>
+                <button @click="viewModal = false" class="text-gray-500 hover:text-gray-700">✕</button>
+            </div>
+            <div class="mb-4">
+                <label class="block text-sm font-medium mb-2">Usage:</label>
+                <div class="bg-gray-900 text-green-400 p-4 rounded font-mono text-sm">
+                    <div x-text="'curl ' + window.location.origin + '/' + currentScript?.username + '/' + currentScript?.name + ' | sh'"></div>
+                </div>
+            </div>
+            <div>
+                <label class="block text-sm font-medium mb-2">Content:</label>
+                <pre class="bg-gray-100 p-4 rounded overflow-x-auto text-sm" x-text="scriptContent"></pre>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function community() {
+    return {
+        scripts: [],
+        searchQuery: '',
+        loading: true,
+        viewModal: false,
+        currentScript: null,
+        scriptContent: '',
+        showToast: false,
+        toastMessage: '',
+        
+        get filteredScripts() {
+            if (!this.searchQuery) return this.scripts;
+            
+            const query = this.searchQuery.toLowerCase();
+            return this.scripts.filter(s => 
+                s.name.toLowerCase().includes(query) || 
+                (s.description && s.description.toLowerCase().includes(query)) ||
+                (s.username && s.username.toLowerCase().includes(query)) ||
+                (s.cachedContent && s.cachedContent.toLowerCase().includes(query))
+            );
+        },
+        
+        init() {
+            if (!getToken()) {
+                window.location.href = '/login';
+                return;
+            }
+            this.loadScripts();
+        },
+        
+        loadScripts() {
+            fetch('/api/community/scripts', {
+                headers: { 'Authorization': 'Bearer ' + getToken() }
+            })
+            .then(res => res.json())
+            .then(data => {
+                this.scripts = data || [];
+                this.loading = false;
+                
+                // Fetch content for search
+                this.scripts.forEach(script => {
+                    fetch(`/${script.username}/${script.name}`)
+                        .then(res => res.text())
+                        .then(content => {
+                            script.cachedContent = content;
+                        })
+                        .catch(() => {});
+                });
+            })
+            .catch(() => {
+                this.loading = false;
+            });
+        },
+        
+        viewScript(script) {
+            this.currentScript = script;
+            fetch(`/${script.username}/${script.name}`)
+                .then(res => res.text())
+                .then(content => {
+                    this.scriptContent = content;
+                    this.viewModal = true;
+                });
+        },
+        
+        copyUrl(script) {
+            const url = `${window.location.origin}/${script.username}/${script.name}`;
+            if (navigator.clipboard && navigator.clipboard.writeText) {
+                navigator.clipboard.writeText(url).then(() => {
+                    this.showToastMessage('URL copied to clipboard!');
+                }).catch(() => {
+                    this.fallbackCopy(url);
+                });
+            } else {
+                this.fallbackCopy(url);
+            }
+        },
+        
+        fallbackCopy(text) {
+            const textarea = document.createElement('textarea');
+            textarea.value = text;
+            textarea.style.position = 'fixed';
+            textarea.style.opacity = '0';
+            document.body.appendChild(textarea);
+            textarea.select();
+            try {
+                document.execCommand('copy');
+                this.showToastMessage('URL copied to clipboard!');
+            } catch (err) {
+                this.showToastMessage('Failed to copy URL');
+            }
+            document.body.removeChild(textarea);
+        },
+        
+        showToastMessage(message) {
+            this.toastMessage = message;
+            this.showToast = true;
+            setTimeout(() => {
+                this.showToast = false;
+            }, 3000);
+        }
+    }
+}
+</script>
+{{end}}

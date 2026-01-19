@@ -1,6 +1,6 @@
 # shebangrun Python Client
 
-Python client library for [shebang.run](https://shebang.run) - a platform for hosting and sharing shell scripts with versioning, encryption, and signing.
+Python client library and CLI tool for [shebang.run](https://shebang.run) - a platform for hosting and sharing shell scripts with versioning, encryption, and signing.
 
 ## Installation
 
@@ -8,14 +8,130 @@ Python client library for [shebang.run](https://shebang.run) - a platform for ho
 pip install shebangrun
 ```
 
-Or install from source:
+This installs both the Python library and the `shebang` CLI tool.
+
+## CLI Tool
+
+### Quick Start
 
 ```bash
-cd python
-pip install -e .
+# Login and generate API credentials
+shebang login
+
+# List your scripts
+shebang list
+
+# Get a script
+shebang get myscript
+
+# Run a script
+shebang run myscript
 ```
 
-## Quick Start
+### Commands
+
+#### Login
+```bash
+shebang login
+```
+Interactive wizard that:
+- Prompts for server URL, username, password
+- Generates API credentials (Client ID/Secret)
+- Saves to `~/.shebangrc`
+
+#### List Scripts
+```bash
+# Your scripts
+shebang list
+
+# Include community scripts
+shebang list -c
+```
+
+#### Search Scripts
+```bash
+# Search your scripts
+shebang search "deploy"
+
+# Search community
+shebang search -c "backup"
+```
+
+#### Get Script
+```bash
+# Download to stdout
+shebang get myscript
+
+# From another user
+shebang get -u username scriptname
+
+# Save to file
+shebang get -O deploy.sh myscript
+
+# Decrypt with private key
+shebang get -k private.pem encrypted-script
+```
+
+#### Run Script
+```bash
+# Run with confirmation
+shebang run myscript
+
+# Auto-accept (no prompt)
+shebang run -a myscript
+
+# Pass arguments
+shebang run myscript arg1 arg2
+
+# Run and delete
+shebang run -d myscript
+```
+
+#### Key Management
+```bash
+# List keys
+shebang list-keys
+
+# Create new keypair
+shebang create-key
+shebang create-key -O mykey.pem
+
+# Delete key
+shebang delete-key keyname
+```
+
+#### Upload Script
+```bash
+# Upload from file
+shebang put -n myscript -v public -f script.sh
+
+# Upload from stdin
+cat script.sh | shebang put -n myscript -v public -s
+
+# Upload private script with encryption
+shebang put -n private-script -v priv -k my-key -f script.sh -d "My private script"
+```
+
+### CLI Options
+
+**Visibility:**
+- `priv` - Private (encrypted, requires key)
+- `unlist` - Unlisted (accessible via URL only)
+- `public` - Public (listed in community)
+
+**Configuration:**
+Stored in `~/.shebangrc`:
+```bash
+SHEBANG_URL="https://shebang.run"
+SHEBANG_USERNAME="myuser"
+SHEBANG_CLIENT_ID="..."
+SHEBANG_CLIENT_SECRET="..."
+SHEBANG_KEY_PATH="/path/to/key.pem"
+```
+
+## Python Library
+
+## Python Library
 
 ### Simple Script Fetching
 

@@ -68,6 +68,45 @@
             </button>
         </div>
 
+        <!-- API Tokens -->
+        <div class="bg-white p-6 rounded-lg shadow mb-6">
+            <div class="flex justify-between items-center mb-4">
+                <div>
+                    <h2 class="text-xl font-bold">API Tokens</h2>
+                    <p class="text-sm text-gray-600">Manage API credentials for CLI and programmatic access</p>
+                </div>
+                <button @click="showCreateTokenModal = true" class="bg-indigo-600 text-white px-4 py-2 rounded hover:bg-indigo-700">
+                    Create Token
+                </button>
+            </div>
+
+            <div x-show="apiTokens.length === 0" class="text-center py-8 text-gray-600">
+                No API tokens. Create one to use the CLI tool.
+            </div>
+
+            <div class="space-y-3">
+                <template x-for="token in apiTokens" :key="token.id">
+                    <div class="border rounded p-4">
+                        <div class="flex justify-between items-start">
+                            <div class="flex-1">
+                                <div class="font-medium" x-text="token.name"></div>
+                                <div class="text-sm text-gray-600 font-mono mt-1">
+                                    Client ID: <span x-text="token.client_id"></span>
+                                </div>
+                                <div class="text-xs text-gray-500 mt-1">
+                                    Created: <span x-text="new Date(token.created_at).toLocaleString()"></span>
+                                    <span x-show="token.last_used"> • Last used: <span x-text="new Date(token.last_used).toLocaleString()"></span></span>
+                                </div>
+                            </div>
+                            <button @click="deleteToken(token.id)" class="text-red-600 hover:text-red-700 text-sm">
+                                Delete
+                            </button>
+                        </div>
+                    </div>
+                </template>
+            </div>
+        </div>
+
         <!-- Delete Account -->
         <div class="bg-white p-6 rounded-lg shadow border-2 border-red-200">
             <h2 class="text-xl font-bold mb-4 text-red-600">Danger Zone</h2>
@@ -86,6 +125,48 @@
             <button @click="showDeleteModal = true" class="bg-red-600 text-white px-6 py-2 rounded hover:bg-red-700">
                 Delete My Account
             </button>
+        </div>
+    </div>
+
+    <!-- Create Token Modal -->
+    <div x-show="showCreateTokenModal" @click.away="showCreateTokenModal = false"
+         class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50" style="display: none;">
+        <div class="bg-white p-8 rounded-lg max-w-md w-full" @click.stop>
+            <h2 class="text-2xl font-bold mb-4">Create API Token</h2>
+            <div class="mb-4">
+                <label class="block text-sm font-medium mb-2">Token Name</label>
+                <input type="text" x-model="newTokenName" 
+                       placeholder="CLI Access"
+                       class="w-full px-3 py-2 border rounded focus:ring-2 focus:ring-indigo-500">
+            </div>
+            
+            <div x-show="createdToken" class="bg-yellow-50 border border-yellow-200 p-4 rounded mb-4">
+                <p class="text-sm font-medium mb-2">⚠️ Save these credentials - they won't be shown again!</p>
+                <div class="space-y-2 text-sm">
+                    <div>
+                        <span class="font-medium">Client ID:</span>
+                        <div class="font-mono bg-white p-2 rounded mt-1 break-all text-xs" x-text="createdToken?.client_id"></div>
+                    </div>
+                    <div>
+                        <span class="font-medium">Client Secret:</span>
+                        <div class="font-mono bg-white p-2 rounded mt-1 break-all text-xs" x-text="createdToken?.client_secret"></div>
+                    </div>
+                </div>
+                <button @click="downloadConfig" class="mt-3 bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700 text-sm w-full">
+                    Download .shebangrc
+                </button>
+            </div>
+            
+            <div class="flex space-x-4">
+                <button @click="createToken" x-show="!createdToken"
+                        class="bg-indigo-600 text-white px-6 py-2 rounded hover:bg-indigo-700">
+                    Generate
+                </button>
+                <button @click="closeTokenModal" 
+                        class="bg-gray-300 px-6 py-2 rounded hover:bg-gray-400">
+                    Close
+                </button>
+            </div>
         </div>
     </div>
 
@@ -123,11 +204,93 @@
 function accountSettings() {
     return {
         user: {},
+        apiTokens: [],
         passwordForm: { current: '', new: '', confirm: '' },
         passwordError: '',
         passwordSuccess: false,
         showDeleteModal: false,
+        showCreateTokenModal: false,
         deleteConfirm: '',
+        newTokenName: '',
+        createdToken: null,
+        
+        init() {
+            if (!getToken()) {
+                window.location.href = '/login';
+                return;
+            }
+            this.user = JSON.parse(localStorage.getItem('user') || '{}');
+            this.loadAPITokens();
+        },
+        
+        loadAPITokens() {
+            fetch('/api/account/tokens', {
+                headers: { 'Authorization': 'Bearer ' + getToken() }
+            })
+            .then(res => res.json())
+            .then(data => this.apiTokens = data || [])
+            .catch(() => {});
+        },
+        
+        createToken() {
+            if (!this.newTokenName) {
+                alert('Please enter a token name');
+                return;
+            }
+            
+            fetch('/api/account/tokens', {
+                method: 'POST',
+                headers: {
+                    'Authorization': 'Bearer ' + getToken(),
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ name: this.newTokenName })
+            })
+            .then(res => res.json())
+            .then(data => {
+                this.createdToken = data;
+                this.loadAPITokens();
+            });
+        },
+        
+        closeTokenModal() {
+            if (this.createdToken && !confirm('Have you saved your credentials? They will not be shown again.')) {
+                return;
+            }
+            this.showCreateTokenModal = false;
+            this.newTokenName = '';
+            this.createdToken = null;
+        },
+        
+        deleteToken(id) {
+            if (!confirm('Delete this API token? Applications using it will stop working.')) {
+                return;
+            }
+            
+            fetch('/api/account/tokens/' + id, {
+                method: 'DELETE',
+                headers: { 'Authorization': 'Bearer ' + getToken() }
+            })
+            .then(() => this.loadAPITokens());
+        },
+        
+        downloadConfig() {
+            const config = `# shebang.run CLI configuration
+SHEBANG_URL="${window.location.origin}"
+SHEBANG_USERNAME="${this.user.username}"
+SHEBANG_CLIENT_ID="${this.createdToken.client_id}"
+SHEBANG_CLIENT_SECRET="${this.createdToken.client_secret}"
+SHEBANG_KEY_PATH=""
+`;
+            
+            const blob = new Blob([config], { type: 'text/plain' });
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = '.shebangrc';
+            a.click();
+            window.URL.revokeObjectURL(url);
+        },
         
         init() {
             if (!getToken()) {

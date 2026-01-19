@@ -41,6 +41,7 @@ func main() {
 	adminHandler := api.NewAdminHandler(db, cfg)
 	accountHandler := api.NewAccountHandler(db, cfg)
 	setupHandler := api.NewSetupHandler(db)
+	communityHandler := api.NewCommunityHandler(db)
 	webHandler := api.NewWebHandler()
 
 	r := chi.NewRouter()
@@ -94,6 +95,7 @@ func main() {
 		r.Get("/login", webHandler.Login)
 		r.Get("/register", webHandler.Register)
 		r.Get("/dashboard", webHandler.Dashboard)
+		r.Get("/community", webHandler.Community)
 		r.Get("/keys", webHandler.Keys)
 		r.Get("/account", webHandler.Account)
 		r.Get("/script-editor", webHandler.ScriptEditor)
@@ -122,7 +124,7 @@ func main() {
 	})
 
 	r.Route("/api/keys", func(r chi.Router) {
-		r.Use(middleware.AuthMiddleware(cfg.JWTSecret))
+		r.Use(middleware.AuthMiddleware(cfg.JWTSecret, db))
 		r.Get("/", keyHandler.List)
 		r.Post("/generate", keyHandler.Generate)
 		r.Post("/import", keyHandler.Import)
@@ -130,7 +132,7 @@ func main() {
 	})
 
 	r.Route("/api/scripts", func(r chi.Router) {
-		r.Use(middleware.AuthMiddleware(cfg.JWTSecret))
+		r.Use(middleware.AuthMiddleware(cfg.JWTSecret, db))
 		r.Get("/", scriptHandler.List)
 		r.Post("/", scriptHandler.Create)
 		r.Get("/{id}", scriptHandler.Get)
@@ -142,7 +144,7 @@ func main() {
 	})
 
 	r.Route("/api/admin", func(r chi.Router) {
-		r.Use(middleware.AuthMiddleware(cfg.JWTSecret))
+		r.Use(middleware.AuthMiddleware(cfg.JWTSecret, db))
 		r.Use(middleware.AdminMiddleware)
 		r.Get("/users", adminHandler.ListUsers)
 		r.Put("/users/{id}/limits", adminHandler.SetUserLimits)
@@ -152,10 +154,18 @@ func main() {
 	})
 
 	r.Route("/api/account", func(r chi.Router) {
-		r.Use(middleware.AuthMiddleware(cfg.JWTSecret))
+		r.Use(middleware.AuthMiddleware(cfg.JWTSecret, db))
 		r.Put("/password", accountHandler.ChangePassword)
 		r.Get("/export", accountHandler.ExportData)
 		r.Delete("/", accountHandler.DeleteAccount)
+		r.Get("/tokens", accountHandler.ListAPITokens)
+		r.Post("/tokens", accountHandler.CreateAPIToken)
+		r.Delete("/tokens/{id}", accountHandler.DeleteAPIToken)
+	})
+
+	r.Route("/api/community", func(r chi.Router) {
+		r.Use(middleware.AuthMiddleware(cfg.JWTSecret, db))
+		r.Get("/scripts", communityHandler.ListPublicScripts)
 	})
 
 	r.Get("/{username}/{script}", publicHandler.GetScript)
