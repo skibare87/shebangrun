@@ -292,14 +292,6 @@ SHEBANG_KEY_PATH=""
             window.URL.revokeObjectURL(url);
         },
         
-        init() {
-            if (!getToken()) {
-                window.location.href = '/login';
-                return;
-            }
-            this.user = JSON.parse(localStorage.getItem('user') || '{}');
-        },
-        
         changePassword() {
             this.passwordError = '';
             this.passwordSuccess = false;
