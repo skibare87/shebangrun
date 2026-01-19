@@ -5,6 +5,40 @@
         <a href="/script-editor" class="bg-indigo-600 text-white px-4 py-2 rounded hover:bg-indigo-700">New Script</a>
     </div>
 
+    <!-- Filters and Search -->
+    <div class="bg-white p-4 rounded-lg shadow mb-6">
+        <div class="flex flex-wrap gap-4 items-center">
+            <div class="flex-1 min-w-[200px]">
+                <input type="text" x-model="searchQuery" 
+                       placeholder="Search scripts by name or description..."
+                       class="w-full px-3 py-2 border rounded focus:ring-2 focus:ring-indigo-500">
+            </div>
+            <div class="flex gap-2">
+                <button @click="visibilityFilter = 'all'" 
+                        :class="visibilityFilter === 'all' ? 'bg-indigo-600 text-white' : 'bg-gray-200 text-gray-700'"
+                        class="px-4 py-2 rounded hover:opacity-80">
+                    All
+                </button>
+                <button @click="visibilityFilter = 'public'" 
+                        :class="visibilityFilter === 'public' ? 'bg-green-600 text-white' : 'bg-gray-200 text-gray-700'"
+                        class="px-4 py-2 rounded hover:opacity-80">
+                    Public
+                </button>
+                <button @click="visibilityFilter = 'unlisted'" 
+                        :class="visibilityFilter === 'unlisted' ? 'bg-yellow-600 text-white' : 'bg-gray-200 text-gray-700'"
+                        class="px-4 py-2 rounded hover:opacity-80">
+                    Unlisted
+                </button>
+                <button @click="visibilityFilter = 'private'" 
+                        :class="visibilityFilter === 'private' ? 'bg-red-600 text-white' : 'bg-gray-200 text-gray-700'"
+                        class="px-4 py-2 rounded hover:opacity-80">
+                    Private
+                </button>
+            </div>
+        </div>
+        <div class="mt-2 text-sm text-gray-600" x-text="`Showing ${filteredScripts.length} of ${scripts.length} scripts`"></div>
+    </div>
+
     <!-- Toast notification -->
     <div x-show="showToast" x-transition 
          class="fixed top-4 right-4 bg-green-600 text-white px-6 py-3 rounded-lg shadow-lg z-50"
@@ -17,8 +51,12 @@
         <a href="/script-editor" class="text-indigo-600 hover:text-indigo-700">Create your first script</a>
     </div>
 
+    <div x-show="scripts.length > 0 && filteredScripts.length === 0" class="text-center py-12 bg-white rounded-lg shadow">
+        <p class="text-gray-600">No scripts match your filters.</p>
+    </div>
+
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-        <template x-for="script in scripts" :key="script.id">
+        <template x-for="script in filteredScripts" :key="script.id">
             <div class="bg-white p-6 rounded-lg shadow hover:shadow-lg transition">
                 <div class="flex justify-between items-start mb-2">
                     <h3 class="text-xl font-bold" x-text="script.name"></h3>
@@ -74,11 +112,43 @@
 function dashboard() {
     return {
         scripts: [],
+        searchQuery: '',
+        visibilityFilter: 'all',
         viewModal: false,
         currentScript: null,
         scriptContent: '',
         showToast: false,
         toastMessage: '',
+        
+        get filteredScripts() {
+            let filtered = this.scripts;
+            
+            // Filter by visibility
+            if (this.visibilityFilter !== 'all') {
+                filtered = filtered.filter(s => s.visibility === this.visibilityFilter);
+            }
+            
+            // Search by name, description, or content (for non-private)
+            if (this.searchQuery) {
+                const query = this.searchQuery.toLowerCase();
+                filtered = filtered.filter(s => {
+                    // Always search name and description
+                    if (s.name.toLowerCase().includes(query) || 
+                        (s.description && s.description.toLowerCase().includes(query))) {
+                        return true;
+                    }
+                    
+                    // For non-private scripts, also search content
+                    if (s.visibility !== 'private' && s.cachedContent) {
+                        return s.cachedContent.toLowerCase().includes(query);
+                    }
+                    
+                    return false;
+                });
+            }
+            
+            return filtered;
+        },
         
         init() {
             if (!getToken()) {
@@ -97,7 +167,21 @@ function dashboard() {
                 headers: { 'Authorization': 'Bearer ' + getToken() }
             })
             .then(res => res.json())
-            .then(data => this.scripts = data || []);
+            .then(data => {
+                this.scripts = data || [];
+                // Fetch content for non-private scripts for search
+                this.scripts.forEach(script => {
+                    if (script.visibility !== 'private') {
+                        const user = this.getUser();
+                        fetch(`/${user.username}/${script.name}`)
+                            .then(res => res.text())
+                            .then(content => {
+                                script.cachedContent = content;
+                            })
+                            .catch(() => {});
+                    }
+                });
+            });
         },
         
         viewScript(script) {
