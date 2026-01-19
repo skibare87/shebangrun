@@ -1,0 +1,11 @@
+FROM python:3.11-alpine
+
+# Install shebangrun (cryptography wheels available for alpine)
+RUN pip install --no-cache-dir shebangrun
+
+# Set working directory
+WORKDIR /workspace
+
+# Default command
+ENTRYPOINT ["shebang"]
+CMD ["--help"]
