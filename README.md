@@ -42,6 +42,22 @@ docker-compose logs -f app
 
 The application will be available at `http://localhost`
 
+### CLI Tool
+
+Install the CLI via pip:
+```bash
+pip install shebangrun
+shebang login
+shebang list
+```
+
+Or use the Docker CLI image:
+```bash
+docker run -it --rm -v ~/.shebangrc:/root/.shebangrc dingbatter/shebangcli shebang list
+```
+
+See [Python README](python/README.md) for complete CLI documentation.
+
 ### Local Development
 
 ```bash
