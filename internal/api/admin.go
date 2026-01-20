@@ -2,6 +2,7 @@ package api
 
 import (
 	"encoding/json"
+	"log"
 	"net/http"
 	"strconv"
 
@@ -32,6 +33,7 @@ type UserListResponse struct {
 }
 
 type SetLimitsRequest struct {
+	IsAdmin       *bool  `json:"is_admin"`
 	MaxScripts    *int   `json:"max_scripts"`
 	MaxScriptSize *int64 `json:"max_script_size"`
 	RateLimit     *int   `json:"rate_limit"`
@@ -93,6 +95,7 @@ func (h *AdminHandler) SetUserLimits(w http.ResponseWriter, r *http.Request) {
 
 	var req SetLimitsRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		log.Printf("Failed to decode limits request: %v", err)
 		http.Error(w, "Invalid request", http.StatusBadRequest)
 		return
 	}
@@ -107,6 +110,13 @@ func (h *AdminHandler) SetUserLimits(w http.ResponseWriter, r *http.Request) {
 	if req.RateLimit != nil {
 		if _, err := h.db.Exec("UPDATE users SET rate_limit = ? WHERE id = ?", *req.RateLimit, userID); err != nil {
 			http.Error(w, "Failed to set rate limit", http.StatusInternalServerError)
+			return
+		}
+	}
+	
+	if req.IsAdmin != nil {
+		if _, err := h.db.Exec("UPDATE users SET is_admin = ? WHERE id = ?", *req.IsAdmin, userID); err != nil {
+			http.Error(w, "Failed to set admin status", http.StatusInternalServerError)
 			return
 		}
 	}

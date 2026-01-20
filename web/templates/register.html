@@ -25,6 +25,22 @@
             <button type="submit" class="w-full bg-indigo-600 text-white py-2 rounded-md hover:bg-indigo-700">Sign Up</button>
         </form>
 
+        <div class="mt-6">
+            <div class="relative">
+                <div class="absolute inset-0 flex items-center">
+                    <div class="w-full border-t border-gray-300"></div>
+                </div>
+                <div class="relative flex justify-center text-sm">
+                    <span class="px-2 bg-white text-gray-500">Or sign up with</span>
+                </div>
+            </div>
+            
+            <div class="mt-6 text-center space-x-4">
+                <a href="/api/auth/oauth/github" class="inline-block bg-gray-800 text-white px-4 py-2 rounded hover:bg-gray-900">GitHub</a>
+                <a href="/api/auth/oauth/google" class="inline-block bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">Google</a>
+            </div>
+        </div>
+
         <div class="mt-6 text-center">
             <a href="/login" class="text-indigo-600 hover:text-indigo-700">Already have an account? Login</a>
         </div>
