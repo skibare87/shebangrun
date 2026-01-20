@@ -468,6 +468,39 @@ def cmd_put(args):
         print(f"Error: {e}", file=sys.stderr)
         sys.exit(1)
 
+def cmd_delete(args):
+    """Delete a script"""
+    config = load_config()
+    if not config.get('SHEBANG_CLIENT_ID'):
+        print("Error: Not logged in. Run: shebang login", file=sys.stderr)
+        sys.exit(1)
+    
+    client = ShebangClient(url=config['SHEBANG_URL'].replace('https://', '').replace('http://', ''))
+    client.session.auth = (config['SHEBANG_CLIENT_ID'], config['SHEBANG_CLIENT_SECRET'])
+    
+    try:
+        # Find script by name
+        scripts = client.list_scripts()
+        script = next((s for s in scripts if s['name'] == args.script), None)
+        
+        if not script:
+            print(f"Error: Script '{args.script}' not found", file=sys.stderr)
+            sys.exit(1)
+        
+        # Confirm deletion
+        if not args.accept:
+            confirm = input(f"Delete script '{args.script}'? This cannot be undone. (y/N): ").strip().lower()
+            if confirm != 'y':
+                print("Cancelled")
+                sys.exit(0)
+        
+        client.delete_script(script['id'])
+        print(f"✓ Script '{args.script}' deleted")
+        
+    except Exception as e:
+        print(f"Error: {e}", file=sys.stderr)
+        sys.exit(1)
+
 def main():
     parser = argparse.ArgumentParser(
         prog='shebang',
@@ -526,6 +559,11 @@ def main():
     put_parser.add_argument('-s', '--stdin', action='store_true', help='Read from stdin')
     put_parser.add_argument('-f', '--file', help='Read from file')
     
+    # Delete
+    delete_parser = subparsers.add_parser('delete', help='Delete a script')
+    delete_parser.add_argument('script', help='Script name')
+    delete_parser.add_argument('-a', '--accept', action='store_true', help='Skip confirmation')
+    
     args = parser.parse_args()
     
     if not args.command:
@@ -550,6 +588,8 @@ def main():
         cmd_delete_key(args)
     elif args.command == 'put':
         cmd_put(args)
+    elif args.command == 'delete':
+        cmd_delete(args)
 
 if __name__ == '__main__':
     main()
