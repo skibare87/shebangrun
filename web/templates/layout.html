@@ -21,7 +21,10 @@
             <div class="flex justify-between h-16">
                 <div class="flex">
                     <div class="flex-shrink-0 flex items-center">
-                        <a href="/" class="text-2xl font-bold text-indigo-600">shebang.run</a>
+                        <a href="/" class="flex items-center space-x-2">
+                            <img src="/static/logo.png" alt="shebang.run" class="h-12">
+                            <span class="text-2xl font-bold text-indigo-600">.run</span>
+                        </a>
                     </div>
                 </div>
                 <div class="flex items-center space-x-4" x-data="{ loggedIn: !!localStorage.getItem('token'), isAdmin: JSON.parse(localStorage.getItem('user') || '{}').is_admin }">
@@ -89,6 +92,7 @@
                     <h3 class="font-bold mb-2">Resources</h3>
                     <ul class="text-sm text-gray-600 space-y-1">
                         <li><a href="/docs" class="hover:text-gray-900">Documentation</a></li>
+                        <li><a href="/api-reference" class="hover:text-gray-900">API Reference</a></li>
                         <li><a href="https://github.com/skibare87/shebangrun" class="hover:text-gray-900">GitHub</a></li>
                     </ul>
                 </div>

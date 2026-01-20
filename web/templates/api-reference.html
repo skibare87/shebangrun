@@ -1,0 +1,210 @@
+{{define "content"}}
+<div class="max-w-6xl mx-auto">
+    <div class="mb-8">
+        <h1 class="text-4xl font-bold mb-4">API Reference</h1>
+        <p class="text-gray-600 mb-4">Complete REST API documentation for shebang.run</p>
+        <a href="/openapi.yaml" class="inline-block bg-indigo-600 text-white px-4 py-2 rounded hover:bg-indigo-700">
+            Download OpenAPI Spec (YAML)
+        </a>
+    </div>
+
+    <!-- Authentication -->
+    <section class="mb-12">
+        <h2 class="text-3xl font-bold mb-4">Authentication</h2>
+        
+        <div class="bg-blue-50 border border-blue-200 p-4 rounded-lg mb-6">
+            <h3 class="font-bold mb-2">Two Methods Supported:</h3>
+            <div class="space-y-2 text-sm">
+                <div>
+                    <strong>1. JWT Token</strong> (Web UI, temporary access)
+                    <code class="block bg-white p-2 rounded mt-1">Authorization: Bearer &lt;token&gt;</code>
+                </div>
+                <div>
+                    <strong>2. API Token</strong> (CLI, programmatic access)
+                    <code class="block bg-white p-2 rounded mt-1">Authorization: Basic &lt;base64(client_id:client_secret)&gt;</code>
+                </div>
+            </div>
+        </div>
+
+        <div class="space-y-4">
+            <div class="bg-white p-6 rounded-lg shadow">
+                <h3 class="text-xl font-bold mb-2">POST /api/auth/register</h3>
+                <p class="text-sm text-gray-600 mb-3">Register new user</p>
+                <pre class="bg-gray-100 p-4 rounded text-sm overflow-x-auto">curl -X POST https://shebang.run/api/auth/register \
+  -H "Content-Type: application/json" \
+  -d '{"username":"user","email":"user@example.com","password":"pass"}'</pre>
+            </div>
+
+            <div class="bg-white p-6 rounded-lg shadow">
+                <h3 class="text-xl font-bold mb-2">POST /api/auth/login</h3>
+                <p class="text-sm text-gray-600 mb-3">Login with username and password</p>
+                <pre class="bg-gray-100 p-4 rounded text-sm overflow-x-auto">curl -X POST https://shebang.run/api/auth/login \
+  -H "Content-Type: application/json" \
+  -d '{"username":"user","password":"pass"}'</pre>
+            </div>
+        </div>
+    </section>
+
+    <!-- Scripts -->
+    <section class="mb-12">
+        <h2 class="text-3xl font-bold mb-4">Scripts</h2>
+        
+        <div class="space-y-4">
+            <div class="bg-white p-6 rounded-lg shadow">
+                <h3 class="text-xl font-bold mb-2">GET /api/scripts</h3>
+                <p class="text-sm text-gray-600 mb-3">List your scripts</p>
+                <pre class="bg-gray-100 p-4 rounded text-sm overflow-x-auto">curl https://shebang.run/api/scripts \
+  -H "Authorization: Bearer &lt;token&gt;"</pre>
+            </div>
+
+            <div class="bg-white p-6 rounded-lg shadow">
+                <h3 class="text-xl font-bold mb-2">POST /api/scripts</h3>
+                <p class="text-sm text-gray-600 mb-3">Create new script</p>
+                <pre class="bg-gray-100 p-4 rounded text-sm overflow-x-auto">curl -X POST https://shebang.run/api/scripts \
+  -H "Authorization: Bearer &lt;token&gt;" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "name":"myscript",
+    "content":"#!/bin/bash\\necho Hello",
+    "description":"My script",
+    "visibility":"public"
+  }'</pre>
+            </div>
+
+            <div class="bg-white p-6 rounded-lg shadow">
+                <h3 class="text-xl font-bold mb-2">GET /{username}/{script}[@tag]</h3>
+                <p class="text-sm text-gray-600 mb-3">Retrieve script content (public endpoint)</p>
+                <pre class="bg-gray-100 p-4 rounded text-sm overflow-x-auto"># Latest version
+curl https://shebang.run/user/script | sh
+
+# Specific version
+curl https://shebang.run/user/script@v5 | sh
+
+# Tagged version
+curl https://shebang.run/user/script@dev | sh</pre>
+            </div>
+
+            <div class="bg-white p-6 rounded-lg shadow">
+                <h3 class="text-xl font-bold mb-2">DELETE /api/scripts/{id}</h3>
+                <p class="text-sm text-gray-600 mb-3">Delete script</p>
+                <pre class="bg-gray-100 p-4 rounded text-sm overflow-x-auto">curl -X DELETE https://shebang.run/api/scripts/1 \
+  -H "Authorization: Bearer &lt;token&gt;"</pre>
+            </div>
+        </div>
+    </section>
+
+    <!-- Keys -->
+    <section class="mb-12">
+        <h2 class="text-3xl font-bold mb-4">Keys</h2>
+        
+        <div class="space-y-4">
+            <div class="bg-white p-6 rounded-lg shadow">
+                <h3 class="text-xl font-bold mb-2">GET /api/keys</h3>
+                <p class="text-sm text-gray-600 mb-3">List your keypairs</p>
+                <pre class="bg-gray-100 p-4 rounded text-sm overflow-x-auto">curl https://shebang.run/api/keys \
+  -H "Authorization: Bearer &lt;token&gt;"</pre>
+            </div>
+
+            <div class="bg-white p-6 rounded-lg shadow">
+                <h3 class="text-xl font-bold mb-2">POST /api/keys/generate</h3>
+                <p class="text-sm text-gray-600 mb-3">Generate RSA-4096 keypair</p>
+                <pre class="bg-gray-100 p-4 rounded text-sm overflow-x-auto">curl -X POST https://shebang.run/api/keys/generate \
+  -H "Authorization: Bearer &lt;token&gt;" \
+  -H "Content-Type: application/json" \
+  -d '{"name":"my-key"}'</pre>
+            </div>
+        </div>
+    </section>
+
+    <!-- Account -->
+    <section class="mb-12">
+        <h2 class="text-3xl font-bold mb-4">Account</h2>
+        
+        <div class="space-y-4">
+            <div class="bg-white p-6 rounded-lg shadow">
+                <h3 class="text-xl font-bold mb-2">POST /api/account/tokens</h3>
+                <p class="text-sm text-gray-600 mb-3">Create API token for CLI access</p>
+                <pre class="bg-gray-100 p-4 rounded text-sm overflow-x-auto">curl -X POST https://shebang.run/api/account/tokens \
+  -H "Authorization: Bearer &lt;token&gt;" \
+  -H "Content-Type: application/json" \
+  -d '{"name":"CLI Access"}'</pre>
+            </div>
+
+            <div class="bg-white p-6 rounded-lg shadow">
+                <h3 class="text-xl font-bold mb-2">GET /api/account/export</h3>
+                <p class="text-sm text-gray-600 mb-3">Export all data (GDPR)</p>
+                <pre class="bg-gray-100 p-4 rounded text-sm overflow-x-auto">curl https://shebang.run/api/account/export \
+  -H "Authorization: Bearer &lt;token&gt;"</pre>
+            </div>
+        </div>
+    </section>
+
+    <!-- Community -->
+    <section class="mb-12">
+        <h2 class="text-3xl font-bold mb-4">Community</h2>
+        
+        <div class="bg-white p-6 rounded-lg shadow">
+            <h3 class="text-xl font-bold mb-2">GET /api/community/scripts</h3>
+            <p class="text-sm text-gray-600 mb-3">Browse public scripts</p>
+            <pre class="bg-gray-100 p-4 rounded text-sm overflow-x-auto">curl https://shebang.run/api/community/scripts \
+  -H "Authorization: Bearer &lt;token&gt;"</pre>
+        </div>
+    </section>
+
+    <!-- Python Examples -->
+    <section class="mb-12">
+        <h2 class="text-3xl font-bold mb-4">Python Library</h2>
+        
+        <div class="bg-white p-6 rounded-lg shadow">
+            <pre class="bg-gray-100 p-4 rounded text-sm overflow-x-auto">from shebangrun import ShebangClient, run
+
+# Simple usage
+content = run(username="user", script="myscript")
+
+# With decryption
+content = run(username="user", script="private", 
+              key=open("key.pem").read())
+
+# Full client
+client = ShebangClient()
+client.login("user", "pass")
+scripts = client.list_scripts()
+client.create_script("test", "#!/bin/bash\\necho hi", visibility="public")</pre>
+        </div>
+    </section>
+
+    <!-- Rate Limits -->
+    <section class="mb-12">
+        <h2 class="text-3xl font-bold mb-4">Rate Limits</h2>
+        
+        <div class="bg-white p-6 rounded-lg shadow">
+            <ul class="space-y-2 text-gray-700">
+                <li><strong>Default:</strong> 50 requests per minute</li>
+                <li><strong>Configurable:</strong> Admins can adjust per-user limits</li>
+                <li><strong>Public endpoints:</strong> Subject to rate limiting</li>
+                <li><strong>Authenticated endpoints:</strong> Per-user rate limits apply</li>
+            </ul>
+        </div>
+    </section>
+
+    <!-- Links -->
+    <section>
+        <h2 class="text-3xl font-bold mb-4">Resources</h2>
+        
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <a href="/openapi.yaml" class="bg-white p-6 rounded-lg shadow hover:shadow-lg">
+                <h3 class="font-bold mb-2">OpenAPI Spec</h3>
+                <p class="text-sm text-gray-600">Download YAML specification</p>
+            </a>
+            <a href="https://pypi.org/project/shebangrun/" class="bg-white p-6 rounded-lg shadow hover:shadow-lg">
+                <h3 class="font-bold mb-2">Python Package</h3>
+                <p class="text-sm text-gray-600">pip install shebangrun</p>
+            </a>
+            <a href="https://github.com/skibare87/shebangrun" class="bg-white p-6 rounded-lg shadow hover:shadow-lg">
+                <h3 class="font-bold mb-2">GitHub</h3>
+                <p class="text-sm text-gray-600">Source code and examples</p>
+            </a>
+        </div>
+    </section>
+</div>
+{{end}}

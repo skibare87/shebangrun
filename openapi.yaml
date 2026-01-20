@@ -1,0 +1,715 @@
+openapi: 3.0.0
+info:
+  title: shebang.run API
+  version: 1.0.0
+  description: |
+    REST API for shebang.run - a platform for hosting and sharing shell scripts with versioning, encryption, and signing.
+    
+    ## Authentication
+    
+    Two authentication methods are supported:
+    
+    1. **JWT Token** - For web UI and temporary access
+       - Header: `Authorization: Bearer <token>`
+       - Obtain via `/api/auth/login` or `/api/auth/register`
+    
+    2. **API Token** - For CLI and programmatic access
+       - Header: `Authorization: Basic <base64(client_id:client_secret)>`
+       - Generate via web UI Account page or `/api/account/tokens`
+  
+  contact:
+    email: hello@shebang.run
+  license:
+    name: MIT
+    url: https://github.com/skibare87/shebangrun/blob/main/LICENSE
+
+servers:
+  - url: https://shebang.run
+    description: Production server
+  - url: http://localhost:8080
+    description: Local development
+
+tags:
+  - name: Authentication
+    description: User authentication and OAuth
+  - name: Scripts
+    description: Script management and retrieval
+  - name: Keys
+    description: RSA keypair management
+  - name: Account
+    description: Account settings and API tokens
+  - name: Admin
+    description: Administrative functions
+  - name: Community
+    description: Public script discovery
+
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+    BasicAuth:
+      type: http
+      scheme: basic
+      description: Use Client ID as username and Client Secret as password
+
+  schemas:
+    Script:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        description:
+          type: string
+        visibility:
+          type: string
+          enum: [private, unlisted, public]
+        version:
+          type: integer
+        encrypted:
+          type: boolean
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+    
+    KeyPair:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        public_key:
+          type: string
+        created_at:
+          type: string
+          format: date-time
+    
+    User:
+      type: object
+      properties:
+        id:
+          type: integer
+        username:
+          type: string
+        email:
+          type: string
+        is_admin:
+          type: boolean
+        rate_limit:
+          type: integer
+        created_at:
+          type: string
+          format: date-time
+    
+    APIToken:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        client_id:
+          type: string
+        client_secret:
+          type: string
+          description: Only shown on creation
+        created_at:
+          type: string
+          format: date-time
+        last_used:
+          type: string
+          format: date-time
+
+paths:
+  # Authentication
+  /api/auth/register:
+    post:
+      tags: [Authentication]
+      summary: Register new user
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [username, email, password]
+              properties:
+                username:
+                  type: string
+                email:
+                  type: string
+                password:
+                  type: string
+      responses:
+        '200':
+          description: Registration successful
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  token:
+                    type: string
+                  user:
+                    $ref: '#/components/schemas/User'
+  
+  /api/auth/login:
+    post:
+      tags: [Authentication]
+      summary: Login with username and password
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [username, password]
+              properties:
+                username:
+                  type: string
+                password:
+                  type: string
+      responses:
+        '200':
+          description: Login successful
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  token:
+                    type: string
+                  user:
+                    $ref: '#/components/schemas/User'
+  
+  /api/auth/oauth/{provider}:
+    get:
+      tags: [Authentication]
+      summary: OAuth login
+      parameters:
+        - name: provider
+          in: path
+          required: true
+          schema:
+            type: string
+            enum: [github, google]
+      responses:
+        '307':
+          description: Redirect to OAuth provider
+  
+  # Scripts
+  /api/scripts:
+    get:
+      tags: [Scripts]
+      summary: List user's scripts
+      security:
+        - BearerAuth: []
+        - BasicAuth: []
+      responses:
+        '200':
+          description: List of scripts
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Script'
+    
+    post:
+      tags: [Scripts]
+      summary: Create new script
+      security:
+        - BearerAuth: []
+        - BasicAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [name, content, visibility]
+              properties:
+                name:
+                  type: string
+                content:
+                  type: string
+                description:
+                  type: string
+                visibility:
+                  type: string
+                  enum: [private, unlisted, public]
+                keypair_id:
+                  type: integer
+                  description: Required for private scripts
+      responses:
+        '201':
+          description: Script created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Script'
+  
+  /api/scripts/{id}:
+    get:
+      tags: [Scripts]
+      summary: Get script details
+      security:
+        - BearerAuth: []
+        - BasicAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Script details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Script'
+    
+    put:
+      tags: [Scripts]
+      summary: Update script (creates new version)
+      security:
+        - BearerAuth: []
+        - BasicAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                content:
+                  type: string
+                description:
+                  type: string
+                visibility:
+                  type: string
+                  enum: [private, unlisted, public]
+                keypair_id:
+                  type: integer
+                tag:
+                  type: string
+                  enum: [dev, beta]
+      responses:
+        '200':
+          description: Script updated
+    
+    delete:
+      tags: [Scripts]
+      summary: Delete script
+      security:
+        - BearerAuth: []
+        - BasicAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '204':
+          description: Script deleted
+  
+  /{username}/{script}:
+    get:
+      tags: [Scripts]
+      summary: Retrieve script content
+      parameters:
+        - name: username
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: script
+          in: path
+          required: true
+          schema:
+            type: string
+          description: Script name with optional version tag (@v1, @latest, @dev)
+        - name: token
+          in: query
+          schema:
+            type: string
+          description: Share token for private scripts
+      responses:
+        '200':
+          description: Script content
+          headers:
+            X-Script-Version:
+              schema:
+                type: string
+            X-Script-Checksum:
+              schema:
+                type: string
+            X-Encrypted:
+              schema:
+                type: string
+              description: "true" if encrypted
+            X-Wrapped-Key:
+              schema:
+                type: string
+              description: Hex-encoded wrapped encryption key
+          content:
+            text/plain:
+              schema:
+                type: string
+            application/octet-stream:
+              schema:
+                type: string
+                format: binary
+  
+  /{username}/{script}/meta:
+    get:
+      tags: [Scripts]
+      summary: Get script metadata
+      parameters:
+        - name: username
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: script
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Script metadata
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  name:
+                    type: string
+                  description:
+                    type: string
+                  visibility:
+                    type: string
+                  version:
+                    type: integer
+                  checksum:
+                    type: string
+                  size:
+                    type: integer
+                  created_at:
+                    type: string
+                  updated_at:
+                    type: string
+  
+  # Keys
+  /api/keys:
+    get:
+      tags: [Keys]
+      summary: List keypairs
+      security:
+        - BearerAuth: []
+        - BasicAuth: []
+      responses:
+        '200':
+          description: List of keypairs
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/KeyPair'
+  
+  /api/keys/generate:
+    post:
+      tags: [Keys]
+      summary: Generate new RSA-4096 keypair
+      security:
+        - BearerAuth: []
+        - BasicAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [name]
+              properties:
+                name:
+                  type: string
+      responses:
+        '200':
+          description: Keypair generated
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: integer
+                  name:
+                    type: string
+                  public_key:
+                    type: string
+                  private_key:
+                    type: string
+                    description: Only shown once - save it!
+  
+  /api/keys/{id}:
+    delete:
+      tags: [Keys]
+      summary: Delete keypair
+      security:
+        - BearerAuth: []
+        - BasicAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '204':
+          description: Keypair deleted
+  
+  # Account
+  /api/account/tokens:
+    get:
+      tags: [Account]
+      summary: List API tokens
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: List of API tokens
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/APIToken'
+    
+    post:
+      tags: [Account]
+      summary: Create API token
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [name]
+              properties:
+                name:
+                  type: string
+      responses:
+        '200':
+          description: Token created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/APIToken'
+  
+  /api/account/tokens/{id}:
+    delete:
+      tags: [Account]
+      summary: Delete API token
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '204':
+          description: Token deleted
+  
+  /api/account/password:
+    put:
+      tags: [Account]
+      summary: Change password
+      security:
+        - BearerAuth: []
+        - BasicAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [current_password, new_password]
+              properties:
+                current_password:
+                  type: string
+                new_password:
+                  type: string
+      responses:
+        '200':
+          description: Password changed
+  
+  /api/account/export:
+    get:
+      tags: [Account]
+      summary: Export all user data (GDPR)
+      security:
+        - BearerAuth: []
+        - BasicAuth: []
+      responses:
+        '200':
+          description: User data export
+          content:
+            application/json:
+              schema:
+                type: object
+  
+  /api/account:
+    delete:
+      tags: [Account]
+      summary: Delete account permanently
+      security:
+        - BearerAuth: []
+        - BasicAuth: []
+      responses:
+        '200':
+          description: Account deleted
+  
+  # Community
+  /api/community/scripts:
+    get:
+      tags: [Community]
+      summary: List public scripts from all users
+      security:
+        - BearerAuth: []
+        - BasicAuth: []
+      responses:
+        '200':
+          description: List of public scripts
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    id:
+                      type: integer
+                    name:
+                      type: string
+                    username:
+                      type: string
+                    description:
+                      type: string
+                    version:
+                      type: integer
+                    updated_at:
+                      type: string
+  
+  # Admin
+  /api/admin/users:
+    get:
+      tags: [Admin]
+      summary: List all users (admin only)
+      security:
+        - BearerAuth: []
+        - BasicAuth: []
+      responses:
+        '200':
+          description: List of users
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/User'
+  
+  /api/admin/users/{id}/limits:
+    put:
+      tags: [Admin]
+      summary: Set user limits and role (admin only)
+      security:
+        - BearerAuth: []
+        - BasicAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                is_admin:
+                  type: boolean
+                rate_limit:
+                  type: integer
+                max_scripts:
+                  type: integer
+                max_script_size:
+                  type: integer
+      responses:
+        '200':
+          description: Limits updated
+  
+  /api/admin/users/{id}/password:
+    put:
+      tags: [Admin]
+      summary: Reset user password (admin only)
+      security:
+        - BearerAuth: []
+        - BasicAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [new_password]
+              properties:
+                new_password:
+                  type: string
+      responses:
+        '200':
+          description: Password reset
+  
+  /api/admin/users/{id}:
+    delete:
+      tags: [Admin]
+      summary: Delete user (admin only)
+      security:
+        - BearerAuth: []
+        - BasicAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: User deleted

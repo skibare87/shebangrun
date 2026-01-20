@@ -3,32 +3,71 @@
     <h1 class="text-5xl font-bold text-gray-900 mb-4">shebang.run</h1>
     <p class="text-xl text-gray-600 mb-8">Host and share shell scripts with versioning, encryption, and signing</p>
     
-    <div class="max-w-2xl mx-auto bg-gray-900 text-green-400 p-6 rounded-lg font-mono text-sm mb-8">
-        <div class="mb-2"># Install a script</div>
-        <div>curl https://shebang.run/username/scriptname | sh</div>
-        <div class="mt-4 mb-2"># Get specific version</div>
-        <div>curl https://shebang.run/username/scriptname@v5 | sh</div>
-        <div class="mt-4 mb-2"># Use tagged version</div>
-        <div>curl https://shebang.run/username/scriptname@dev | sh</div>
+    <div class="max-w-3xl mx-auto mb-8">
+        <div class="bg-gray-900 text-green-400 p-6 rounded-lg font-mono text-sm">
+            <div class="mb-4">
+                <div class="text-gray-500 mb-2"># Python Library</div>
+                <div>pip install shebangrun</div>
+                <div class="mt-2">from shebangrun import run</div>
+                <div>run(username="user", script="deploy", eval=True)</div>
+            </div>
+            
+            <div class="mb-4">
+                <div class="text-gray-500 mb-2"># CLI Tool</div>
+                <div>shebang login</div>
+                <div>shebang list</div>
+                <div>shebang get myscript</div>
+            </div>
+            
+            <div>
+                <div class="text-gray-500 mb-2"># Direct Execution</div>
+                <div>curl https://shebang.run/user/script | sh</div>
+            </div>
+        </div>
     </div>
 
-    <div class="space-x-4">
+    <div class="space-x-4 mb-16">
         <a href="/register" class="bg-indigo-600 text-white px-8 py-3 rounded-lg text-lg hover:bg-indigo-700">Get Started</a>
         <a href="/login" class="bg-gray-200 text-gray-800 px-8 py-3 rounded-lg text-lg hover:bg-gray-300">Login</a>
     </div>
 
+    <div class="mt-16 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 text-left">
+        <div class="bg-white p-6 rounded-lg shadow">
+            <h3 class="text-xl font-bold mb-2">🐍 Python Library</h3>
+            <p class="text-gray-600 text-sm">Full-featured Python client with automatic decryption and script execution.</p>
+            <code class="text-xs bg-gray-100 px-2 py-1 rounded mt-2 block">pip install shebangrun</code>
+        </div>
+        
+        <div class="bg-white p-6 rounded-lg shadow">
+            <h3 class="text-xl font-bold mb-2">⚡ CLI Tool</h3>
+            <p class="text-gray-600 text-sm">Command-line interface for managing scripts, keys, and automation workflows.</p>
+            <code class="text-xs bg-gray-100 px-2 py-1 rounded mt-2 block">shebang list</code>
+        </div>
+        
+        <div class="bg-white p-6 rounded-lg shadow">
+            <h3 class="text-xl font-bold mb-2">🔌 REST API</h3>
+            <p class="text-gray-600 text-sm">Complete API with JWT and API token authentication for programmatic access.</p>
+            <a href="/docs" class="text-indigo-600 hover:text-indigo-700 text-sm mt-2 block">View Docs →</a>
+        </div>
+        
+        <div class="bg-white p-6 rounded-lg shadow">
+            <h3 class="text-xl font-bold mb-2">🔐 Encrypted</h3>
+            <p class="text-gray-600 text-sm">End-to-end encryption with RSA-4096 and ChaCha20-Poly1305. Keys never stored.</p>
+        </div>
+    </div>
+
     <div class="mt-16 grid grid-cols-1 md:grid-cols-3 gap-8 text-left">
         <div class="bg-white p-6 rounded-lg shadow">
-            <h3 class="text-xl font-bold mb-2">Versioned</h3>
+            <h3 class="text-xl font-bold mb-2">📦 Versioned</h3>
             <p class="text-gray-600">Auto-incrementing versions with immutable history. Never lose a working version.</p>
         </div>
         <div class="bg-white p-6 rounded-lg shadow">
-            <h3 class="text-xl font-bold mb-2">Secure</h3>
-            <p class="text-gray-600">ChaCha20-Poly1305 encryption and RSA-PSS signatures for private scripts.</p>
+            <h3 class="text-xl font-bold mb-2">🔒 Secure</h3>
+            <p class="text-gray-600">OAuth login, API tokens, rate limiting, and admin controls for enterprise use.</p>
         </div>
         <div class="bg-white p-6 rounded-lg shadow">
-            <h3 class="text-xl font-bold mb-2">Flexible</h3>
-            <p class="text-gray-600">Public, unlisted, or private scripts with token-based sharing.</p>
+            <h3 class="text-xl font-bold mb-2">🌐 Flexible</h3>
+            <p class="text-gray-600">Public, unlisted, or private scripts with token-based sharing and community discovery.</p>
         </div>
     </div>
 </div>

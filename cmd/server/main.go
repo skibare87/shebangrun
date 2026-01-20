@@ -65,6 +65,11 @@ func main() {
 	// Serve static files
 	fileServer := http.FileServer(http.Dir("web/static"))
 	r.Handle("/static/*", http.StripPrefix("/static/", fileServer))
+	
+	// Serve OpenAPI spec
+	r.Get("/openapi.yaml", func(w http.ResponseWriter, r *http.Request) {
+		http.ServeFile(w, r, "openapi.yaml")
+	})
 
 	// Setup check middleware - redirect to setup if needed
 	setupCheck := func(next http.Handler) http.Handler {
@@ -104,6 +109,7 @@ func main() {
 		r.Get("/docs", webHandler.Docs)
 		r.Get("/admin", webHandler.Admin)
 		r.Get("/terms", webHandler.Terms)
+		r.Get("/api-reference", webHandler.APIReference)
 	})
 
 	r.Route("/api/auth", func(r chi.Router) {
