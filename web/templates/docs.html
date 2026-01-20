@@ -72,6 +72,62 @@ curl https://shebang.run/user/script/verify
         </div>
     </section>
 
+    <!-- CLI Tool -->
+    <section class="mb-12">
+        <h2 class="text-2xl font-bold mb-4">CLI Tool</h2>
+        
+        <div class="bg-white p-6 rounded-lg shadow mb-4">
+            <h3 class="text-lg font-bold mb-3">Installation</h3>
+            <div class="bg-gray-900 text-green-400 p-4 rounded font-mono text-sm mb-4">
+pip install shebangrun
+            </div>
+
+            <h3 class="text-lg font-bold mb-3">Quick Start</h3>
+            <pre class="bg-gray-100 p-4 rounded text-sm overflow-x-auto"># Login and generate API credentials
+shebang login
+
+# List your scripts
+shebang list
+
+# List community scripts
+shebang list -c
+
+# Search scripts
+shebang search "deploy"
+
+# Get a script
+shebang get myscript
+
+# Run a script
+shebang run myscript
+
+# Upload a script
+shebang put -n myscript -v public -f script.sh</pre>
+
+            <h3 class="text-lg font-bold mb-3 mt-6">Key Management</h3>
+            <pre class="bg-gray-100 p-4 rounded text-sm overflow-x-auto"># List keys
+shebang list-keys
+
+# Create new keypair
+shebang create-key -O mykey.pem
+
+# Delete key
+shebang delete-key keyname</pre>
+
+            <h3 class="text-lg font-bold mb-3 mt-6">Docker Usage</h3>
+            <pre class="bg-gray-100 p-4 rounded text-sm overflow-x-auto"># Use CLI via Docker
+docker run -it --rm -v ~/.shebangrc:/root/.shebangrc \
+  dingbatter/shebangcli shebang list
+
+# Create alias
+alias shebang='docker run -it --rm -v ~/.shebangrc:/root/.shebangrc dingbatter/shebangcli'</pre>
+
+            <p class="mt-4">
+                <a href="https://pypi.org/project/shebangrun/" class="text-indigo-600 hover:text-indigo-700">View on PyPI →</a>
+            </p>
+        </div>
+    </section>
+
     <!-- Python Library -->
     <section class="mb-12">
         <h2 class="text-2xl font-bold mb-4">Python Library</h2>
