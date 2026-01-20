@@ -435,16 +435,33 @@ def cmd_put(args):
             print("Error: Private scripts require -k/--keyname", file=sys.stderr)
             sys.exit(1)
         
-        print(f"Uploading script '{args.name}'...")
-        result = client.create_script(
-            name=args.name,
-            content=content,
-            description=args.description or "",
-            visibility=visibility,
-            keypair_id=keypair_id
-        )
+        # Check if script exists
+        scripts = client.list_scripts()
+        existing = next((s for s in scripts if s['name'] == args.name), None)
         
-        print(f"✓ Script created: {args.name} (v{result['version']})")
+        if existing:
+            # Update existing script
+            print(f"Updating script '{args.name}'...")
+            client.update_script(
+                script_id=existing['id'],
+                content=content,
+                description=args.description or existing.get('description'),
+                visibility=visibility,
+                keypair_id=keypair_id
+            )
+            print(f"✓ Script updated: {args.name} (v{existing['version'] + 1})")
+        else:
+            # Create new script
+            print(f"Creating script '{args.name}'...")
+            result = client.create_script(
+                name=args.name,
+                content=content,
+                description=args.description or "",
+                visibility=visibility,
+                keypair_id=keypair_id
+            )
+            print(f"✓ Script created: {args.name} (v{result['version']})")
+        
         print(f"  URL: {config['SHEBANG_URL']}/{config['SHEBANG_USERNAME']}/{args.name}")
         
     except Exception as e:
