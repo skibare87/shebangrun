@@ -112,10 +112,13 @@ def cmd_list(args):
     
     try:
         scripts = client.list_scripts()
-        for s in scripts:
-            vis = s['visibility']
-            color = '\033[0;32m' if vis == 'public' else '\033[1;33m' if vis == 'unlisted' else '\033[0;31m'
-            print(f"{color}{s['name']}\033[0m (v{s['version']}) - {s.get('description', 'No description')} [{vis}]")
+        if not scripts:
+            print("(no scripts)")
+        else:
+            for s in scripts:
+                vis = s['visibility']
+                color = '\033[0;32m' if vis == 'public' else '\033[1;33m' if vis == 'unlisted' else '\033[0;31m'
+                print(f"{color}{s['name']}\033[0m (v{s['version']}) - {s.get('description', 'No description')} [{vis}]")
     except Exception as e:
         print(f"Error: {e}", file=sys.stderr)
         sys.exit(1)
@@ -131,11 +134,16 @@ def cmd_list(args):
                 f"{config['SHEBANG_URL']}/api/community/scripts",
                 auth=(config['SHEBANG_CLIENT_ID'], config['SHEBANG_CLIENT_SECRET'])
             )
+            response.raise_for_status()
             scripts = response.json()
-            for s in scripts:
-                print(f"\033[0;32m{s['username']}/{s['name']}\033[0m (v{s['version']}) - {s.get('description', 'No description')}")
+            
+            if not scripts:
+                print("(no community scripts)")
+            else:
+                for s in scripts:
+                    print(f"\033[0;32m{s['username']}/{s['name']}\033[0m (v{s['version']}) - {s.get('description', 'No description')}")
         except Exception as e:
-            print(f"Error: {e}", file=sys.stderr)
+            print(f"Error loading community scripts: {e}", file=sys.stderr)
 
 def cmd_search(args):
     """Search scripts"""
