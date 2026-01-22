@@ -3,8 +3,8 @@
 
 -- User encryption keys (UDEK)
 CREATE TABLE user_encryption_keys (
-    id INT PRIMARY KEY AUTO_INCREMENT,
-    user_id INT NOT NULL,
+    id BIGINT PRIMARY KEY AUTO_INCREMENT,
+    user_id BIGINT NOT NULL,
     encrypted_udek TEXT NOT NULL,  -- Encrypted with master key
     key_version INT DEFAULT 1,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
@@ -15,13 +15,16 @@ CREATE TABLE user_encryption_keys (
 
 -- Update scripts table for server-side encryption
 ALTER TABLE scripts 
-    ADD COLUMN encryption_type ENUM('none', 'server_managed', 'user_managed') DEFAULT 'none' AFTER visibility,
+    ADD COLUMN encryption_type ENUM('none', 'server_managed', 'user_managed') DEFAULT 'none' AFTER visibility;
+
+-- Update script_content table
+ALTER TABLE script_content
     ADD COLUMN encrypted_content LONGBLOB NULL AFTER content;
 
 -- Secrets store
 CREATE TABLE secrets (
-    id INT PRIMARY KEY AUTO_INCREMENT,
-    user_id INT NOT NULL,
+    id BIGINT PRIMARY KEY AUTO_INCREMENT,
+    user_id BIGINT NOT NULL,
     key_name VARCHAR(255) NOT NULL,
     encrypted_value TEXT NOT NULL,
     version INT DEFAULT 1,
@@ -37,9 +40,9 @@ CREATE TABLE secrets (
 
 -- Secrets audit log
 CREATE TABLE secrets_audit (
-    id INT PRIMARY KEY AUTO_INCREMENT,
-    secret_id INT NOT NULL,
-    user_id INT NOT NULL,
+    id BIGINT PRIMARY KEY AUTO_INCREMENT,
+    secret_id BIGINT NOT NULL,
+    user_id BIGINT NOT NULL,
     action ENUM('read', 'write', 'delete') NOT NULL,
     ip_address VARCHAR(45),
     user_agent TEXT,
@@ -52,12 +55,12 @@ CREATE TABLE secrets_audit (
 
 -- Script access control (ACL)
 CREATE TABLE script_access (
-    id INT PRIMARY KEY AUTO_INCREMENT,
-    script_id INT NOT NULL,
+    id BIGINT PRIMARY KEY AUTO_INCREMENT,
+    script_id BIGINT NOT NULL,
     access_type ENUM('link', 'user', 'group') NOT NULL,
-    user_id INT NULL,
-    group_id INT NULL,
-    granted_by INT NOT NULL,
+    user_id BIGINT NULL,
+    group_id BIGINT NULL,
+    granted_by BIGINT NOT NULL,
     granted_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     expires_at TIMESTAMP NULL,
     FOREIGN KEY (script_id) REFERENCES scripts(id) ON DELETE CASCADE,
@@ -70,8 +73,8 @@ CREATE TABLE script_access (
 
 -- User groups (for future group-based sharing)
 CREATE TABLE user_groups (
-    id INT PRIMARY KEY AUTO_INCREMENT,
-    owner_id INT NOT NULL,
+    id BIGINT PRIMARY KEY AUTO_INCREMENT,
+    owner_id BIGINT NOT NULL,
     name VARCHAR(255) NOT NULL,
     description TEXT,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
@@ -81,9 +84,9 @@ CREATE TABLE user_groups (
 );
 
 CREATE TABLE group_members (
-    group_id INT NOT NULL,
-    user_id INT NOT NULL,
-    added_by INT NOT NULL,
+    group_id BIGINT NOT NULL,
+    user_id BIGINT NOT NULL,
+    added_by BIGINT NOT NULL,
     added_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     PRIMARY KEY (group_id, user_id),
     FOREIGN KEY (group_id) REFERENCES user_groups(id) ON DELETE CASCADE,
