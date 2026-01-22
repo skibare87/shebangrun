@@ -288,6 +288,9 @@ def cmd_run(args):
             url=config.get('SHEBANG_URL', 'shebang.run').replace('https://', '').replace('http://', '')
         )
         
+        # Always substitute secrets for run
+        content = substitute_secrets(content, config)
+        
         # Save to temp file or specified output
         import tempfile
         if args.output:
