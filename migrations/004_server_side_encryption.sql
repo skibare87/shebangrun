@@ -5,7 +5,7 @@
 CREATE TABLE user_encryption_keys (
     id BIGINT PRIMARY KEY AUTO_INCREMENT,
     user_id BIGINT NOT NULL,
-    encrypted_udek TEXT NOT NULL,  -- Encrypted with master key
+    encrypted_udek BLOB NOT NULL,  -- Encrypted with master key (binary data)
     key_version INT DEFAULT 1,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     rotated_at TIMESTAMP NULL,
@@ -26,7 +26,7 @@ CREATE TABLE secrets (
     id BIGINT PRIMARY KEY AUTO_INCREMENT,
     user_id BIGINT NOT NULL,
     key_name VARCHAR(255) NOT NULL,
-    encrypted_value TEXT NOT NULL,
+    encrypted_value BLOB NOT NULL,  -- Binary encrypted data
     version INT DEFAULT 1,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
