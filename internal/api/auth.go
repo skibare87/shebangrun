@@ -223,12 +223,14 @@ func (h *AuthHandler) OAuthLogin(w http.ResponseWriter, r *http.Request, provide
 		if h.github != nil {
 			// Update redirect URL based on request
 			redirectURL := buildRedirectURL(r, callbackPath)
+			fmt.Printf("GitHub OAuth redirect URL: %s\n", redirectURL)
 			p = auth.NewGitHubProvider(h.cfg.GitHubClientID, h.cfg.GitHubClientSecret, redirectURL)
 		}
 	case "google":
 		callbackPath = "/api/auth/oauth/google/callback"
 		if h.google != nil {
 			redirectURL := buildRedirectURL(r, callbackPath)
+			fmt.Printf("Google OAuth redirect URL: %s\n", redirectURL)
 			p = auth.NewGoogleProvider(h.cfg.GoogleClientID, h.cfg.GoogleClientSecret, redirectURL)
 		}
 	default:
@@ -286,6 +288,7 @@ func (h *AuthHandler) OAuthCallback(w http.ResponseWriter, r *http.Request, prov
 		return
 	}
 
+	isNewUser := false
 	user, err := h.db.GetUserByOAuth(provider, oauthUser.ID)
 	if err != nil {
 		// Check if user exists with this email
@@ -296,6 +299,7 @@ func (h *AuthHandler) OAuthCallback(w http.ResponseWriter, r *http.Request, prov
 			user = existingUser
 		} else {
 			// Create new user
+			isNewUser = true
 			isFirst, _ := h.db.IsFirstUser()
 			username := oauthUser.Username
 			if username == "" {
@@ -324,14 +328,9 @@ func (h *AuthHandler) OAuthCallback(w http.ResponseWriter, r *http.Request, prov
 		return
 	}
 
-	// Check if username needs to be set (starts with email prefix or has provider suffix)
-	needsUsername := strings.Contains(user.Username, "@") || 
-	                 strings.HasSuffix(user.Username, "_"+provider) ||
-	                 strings.Contains(user.Username, "_github") ||
-	                 strings.Contains(user.Username, "_google")
-	
+	// Check if username needs to be set (new OAuth user)
 	redirectPath := "/dashboard"
-	if needsUsername {
+	if isNewUser {
 		redirectPath = "/select-username?temp_token=" + jwtToken
 	}
 
@@ -350,7 +349,7 @@ window.location.href = '%s';
 </html>
 `, 
 	func() string {
-		if !needsUsername {
+		if !isNewUser {
 			return fmt.Sprintf(`localStorage.setItem('token', '%s');
 localStorage.setItem('user', JSON.stringify({
 	id: %d,
