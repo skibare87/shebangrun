@@ -187,6 +187,12 @@ func main() {
 		r.Use(middleware.AuthMiddleware(cfg.JWTSecret, db))
 		r.Get("/search", shareHandler.SearchUsers)
 	})
+	
+	// Shared scripts
+	r.Route("/api/shared", func(r chi.Router) {
+		r.Use(middleware.AuthMiddleware(cfg.JWTSecret, db))
+		r.Get("/scripts", shareHandler.ListSharedScripts)
+	})
 
 	r.Route("/api/admin", func(r chi.Router) {
 		r.Use(middleware.AuthMiddleware(cfg.JWTSecret, db))

@@ -187,3 +187,60 @@ func (h *ShareHandler) SearchUsers(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(usernames)
 }
+
+func (h *ShareHandler) ListSharedScripts(w http.ResponseWriter, r *http.Request) {
+	claims, ok := middleware.GetUserFromContext(r.Context())
+	if !ok {
+		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+		return
+	}
+	
+	// Get scripts shared with this user
+	rows, err := h.db.Query(`
+		SELECT DISTINCT s.id, s.user_id, s.name, s.description, s.visibility, s.created_at, s.updated_at,
+		       u.username as owner_username,
+		       (SELECT version FROM script_versions WHERE script_id = s.id ORDER BY version DESC LIMIT 1) as version
+		FROM scripts s
+		JOIN users u ON s.user_id = u.id
+		JOIN script_access sa ON s.id = sa.script_id
+		WHERE s.visibility = 'unlisted'
+		  AND s.user_id != ?
+		  AND (
+		      (sa.access_type = 'link' AND (sa.expires_at IS NULL OR sa.expires_at > NOW()))
+		      OR (sa.access_type = 'user' AND sa.user_id = ? AND (sa.expires_at IS NULL OR sa.expires_at > NOW()))
+		  )
+		ORDER BY s.updated_at DESC
+	`, claims.UserID, claims.UserID)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	defer rows.Close()
+	
+	var scripts []map[string]interface{}
+	for rows.Next() {
+		var id, userID, version int64
+		var name, description, visibility, ownerUsername string
+		var createdAt, updatedAt time.Time
+		
+		if err := rows.Scan(&id, &userID, &name, &description, &visibility, &createdAt, &updatedAt, &ownerUsername, &version); err != nil {
+			continue
+		}
+		
+		scripts = append(scripts, map[string]interface{}{
+			"id":          id,
+			"user_id":     userID,
+			"name":        name,
+			"description": description,
+			"visibility":  visibility,
+			"version":     version,
+			"owner":       ownerUsername,
+			"created_at":  createdAt,
+			"updated_at":  updatedAt,
+			"shared":      true,
+		})
+	}
+	
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(scripts)
+}

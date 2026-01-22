@@ -35,6 +35,12 @@
                     Private
                 </button>
             </div>
+            <div class="flex items-center gap-2">
+                <label class="flex items-center space-x-2 text-sm">
+                    <input type="checkbox" x-model="showShared" @change="loadScripts()" class="form-checkbox">
+                    <span>Show Shared</span>
+                </label>
+            </div>
         </div>
         <div class="mt-2 text-sm text-gray-600" x-text="`Showing ${filteredScripts.length} of ${scripts.length} scripts`"></div>
     </div>
@@ -59,7 +65,10 @@
         <template x-for="script in filteredScripts" :key="script.id">
             <div class="bg-white p-6 rounded-lg shadow hover:shadow-lg transition">
                 <div class="flex justify-between items-start mb-2">
-                    <h3 class="text-xl font-bold" x-text="script.name"></h3>
+                    <div>
+                        <h3 class="text-xl font-bold" x-text="script.name"></h3>
+                        <p x-show="script.shared" class="text-xs text-gray-500">by <span x-text="script.owner"></span></p>
+                    </div>
                     <span class="text-xs px-2 py-1 rounded" 
                           :class="{
                               'bg-green-100 text-green-800': script.visibility === 'public',
@@ -75,11 +84,11 @@
                     <span x-text="new Date(script.updated_at).toLocaleDateString()"></span>
                 </div>
                 <div class="flex flex-wrap gap-2">
-                    <a :href="'/script-editor?id=' + script.id" class="text-indigo-600 hover:text-indigo-700 text-sm">Edit</a>
+                    <a x-show="!script.shared" :href="'/script-editor?id=' + script.id" class="text-indigo-600 hover:text-indigo-700 text-sm">Edit</a>
                     <button @click="viewScript(script)" class="text-blue-600 hover:text-blue-700 text-sm">View</button>
                     <button @click="copyUrl(script)" class="text-green-600 hover:text-green-700 text-sm">Copy URL</button>
-                    <button x-show="script.visibility === 'unlisted'" @click="shareScript(script)" class="text-purple-600 hover:text-purple-700 text-sm">Share</button>
-                    <button @click="deleteScript(script.id)" class="text-red-600 hover:text-red-700 text-sm">Delete</button>
+                    <button x-show="!script.shared && script.visibility === 'unlisted'" @click="shareScript(script)" class="text-purple-600 hover:text-purple-700 text-sm">Share</button>
+                    <button x-show="!script.shared" @click="deleteScript(script.id)" class="text-red-600 hover:text-red-700 text-sm">Delete</button>
                 </div>
             </div>
         </template>
@@ -182,6 +191,7 @@ function dashboard() {
         scripts: [],
         searchQuery: '',
         visibilityFilter: 'all',
+        showShared: true,
         viewModal: false,
         shareModal: false,
         currentScript: null,
@@ -236,25 +246,42 @@ function dashboard() {
             return JSON.parse(localStorage.getItem('user') || '{}');
         },
         
-        loadScripts() {
-            fetch('/api/scripts', {
+        async loadScripts() {
+            // Load user's own scripts
+            const response = await fetch('/api/scripts', {
                 headers: { 'Authorization': 'Bearer ' + getToken() }
-            })
-            .then(res => res.json())
-            .then(data => {
-                this.scripts = data || [];
-                // Fetch content for non-private scripts for search
-                this.scripts.forEach(script => {
-                    if (script.visibility !== 'private') {
-                        const user = this.getUser();
-                        fetch(`/${user.username}/${script.name}`)
-                            .then(res => res.text())
-                            .then(content => {
-                                script.cachedContent = content;
-                            })
-                            .catch(() => {});
-                    }
+            });
+            let myScripts = [];
+            if (response.ok) {
+                myScripts = await response.json() || [];
+            }
+            
+            // Load shared scripts if enabled
+            let sharedScripts = [];
+            if (this.showShared) {
+                const sharedResponse = await fetch('/api/shared/scripts', {
+                    headers: { 'Authorization': 'Bearer ' + getToken() }
                 });
+                if (sharedResponse.ok) {
+                    sharedScripts = await sharedResponse.json() || [];
+                }
+            }
+            
+            this.scripts = [...myScripts, ...sharedScripts];
+            
+            // Fetch content for non-private scripts for search
+            this.scripts.forEach(script => {
+                if (script.visibility !== 'private') {
+                    const owner = script.owner || this.getUser().username;
+                    fetch(`/${owner}/${script.name}`, {
+                        headers: { 'Authorization': 'Bearer ' + getToken() }
+                    })
+                        .then(res => res.text())
+                        .then(content => {
+                            script.cachedContent = content;
+                        })
+                        .catch(() => {});
+                }
             });
         },
         
