@@ -6,7 +6,9 @@ import (
 
 	"shebang.run/internal/api"
 	"shebang.run/internal/config"
+	"shebang.run/internal/crypto"
 	"shebang.run/internal/database"
+	"shebang.run/internal/kms"
 	"shebang.run/internal/middleware"
 	"shebang.run/internal/storage"
 
@@ -34,6 +36,22 @@ func main() {
 		log.Fatalf("Failed to initialize storage: %v", err)
 	}
 
+	// Initialize KMS
+	var keyManager kms.KeyManager
+	if cfg.MasterKeySource == "env" {
+		keyManager, err = kms.NewEnvKeyManager(cfg.MasterKeyEnv)
+		if err != nil {
+			log.Printf("Warning: KMS not initialized: %v", err)
+			log.Printf("Server-side encryption features will be disabled")
+		}
+	}
+
+	// Initialize UDEK manager
+	var udekManager *crypto.UDEKManager
+	if keyManager != nil {
+		udekManager = crypto.NewUDEKManager(db.DB, keyManager)
+	}
+
 	authHandler := api.NewAuthHandler(db, cfg)
 	keyHandler := api.NewKeyHandler(db)
 	scriptHandler := api.NewScriptHandler(db, store, cfg)
@@ -43,6 +61,11 @@ func main() {
 	setupHandler := api.NewSetupHandler(db)
 	communityHandler := api.NewCommunityHandler(db)
 	webHandler := api.NewWebHandler()
+	
+	var secretsHandler *api.SecretsHandler
+	if udekManager != nil {
+		secretsHandler = api.NewSecretsHandler(db.DB, udekManager)
+	}
 
 	r := chi.NewRouter()
 	
@@ -102,6 +125,7 @@ func main() {
 		r.Get("/dashboard", webHandler.Dashboard)
 		r.Get("/community", webHandler.Community)
 		r.Get("/keys", webHandler.Keys)
+		r.Get("/secrets", webHandler.Secrets)
 		r.Get("/account", webHandler.Account)
 		r.Get("/script-editor", webHandler.ScriptEditor)
 		r.Get("/privacy", webHandler.Privacy)
@@ -173,6 +197,18 @@ func main() {
 		r.Use(middleware.AuthMiddleware(cfg.JWTSecret, db))
 		r.Get("/scripts", communityHandler.ListPublicScripts)
 	})
+
+	// Secrets management
+	if secretsHandler != nil {
+		r.Route("/api/secrets", func(r chi.Router) {
+			r.Use(middleware.AuthMiddleware(cfg.JWTSecret, db))
+			r.Get("/", secretsHandler.List)
+			r.Post("/", secretsHandler.Create)
+			r.Get("/{name}/value", secretsHandler.GetValue)
+			r.Delete("/{name}", secretsHandler.Delete)
+			r.Get("/{name}/audit", secretsHandler.GetAuditLog)
+		})
+	}
 
 	r.Get("/{username}/{script}", publicHandler.GetScript)
 	r.Get("/{username}/{script}/meta", publicHandler.GetMetadata)

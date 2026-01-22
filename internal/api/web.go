@@ -16,7 +16,7 @@ func NewWebHandler() *WebHandler {
 	}
 	
 	layout := filepath.Join("web", "templates", "layout.html")
-	pages := []string{"index", "login", "register", "dashboard", "keys", "account", "script-editor", "privacy", "gdpr", "setup", "docs", "admin", "terms", "community", "api-reference"}
+	pages := []string{"index", "login", "register", "dashboard", "keys", "account", "script-editor", "privacy", "gdpr", "setup", "docs", "admin", "terms", "community", "api-reference", "secrets"}
 	
 	for _, page := range pages {
 		pagePath := filepath.Join("web", "templates", page+".html")
@@ -113,6 +113,12 @@ func (h *WebHandler) Community(w http.ResponseWriter, r *http.Request) {
 func (h *WebHandler) APIReference(w http.ResponseWriter, r *http.Request) {
 	h.render(w, "api-reference", map[string]interface{}{
 		"Title": "API Reference",
+	})
+}
+
+func (h *WebHandler) Secrets(w http.ResponseWriter, r *http.Request) {
+	h.render(w, "secrets", map[string]interface{}{
+		"Title": "Secrets",
 	})
 }
 
