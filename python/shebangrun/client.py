@@ -264,6 +264,36 @@ class ShebangClient:
         response = self.session.get(url)
         response.raise_for_status()
         return response.json()
+    
+    # Script Sharing
+    def list_script_access(self, script_id: int) -> list:
+        """List access control for a script"""
+        url = f"{self.base_url}/api/scripts/{script_id}/access"
+        response = self.session.get(url)
+        response.raise_for_status()
+        return response.json()
+    
+    def add_script_access(self, script_id: int, usernames: list):
+        """Add users to script ACL"""
+        url = f"{self.base_url}/api/scripts/{script_id}/access"
+        response = self.session.post(url, json={
+            "access_type": "user",
+            "usernames": usernames
+        })
+        response.raise_for_status()
+    
+    def remove_script_access(self, script_id: int, access_id: int):
+        """Remove access from script ACL"""
+        url = f"{self.base_url}/api/scripts/{script_id}/access/{access_id}"
+        response = self.session.delete(url)
+        response.raise_for_status()
+    
+    def list_shared_scripts(self) -> list:
+        """List scripts shared with you"""
+        url = f"{self.base_url}/api/shared/scripts"
+        response = self.session.get(url)
+        response.raise_for_status()
+        return response.json()
 
 
 def run(username: str, script: str, key: Optional[str] = None, 

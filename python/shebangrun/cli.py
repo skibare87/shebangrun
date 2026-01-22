@@ -149,6 +149,22 @@ def cmd_list(args):
         print(f"Error: {e}", file=sys.stderr)
         sys.exit(1)
     
+    # Show shared scripts unless hidden
+    if not args.hide_shared:
+        print()
+        print("Shared With You:")
+        print("=" * 50)
+        
+        try:
+            shared = client.list_shared_scripts()
+            if not shared:
+                print("(no shared scripts)")
+            else:
+                for s in shared:
+                    print(f"\033[1;33m{s['owner']}/{s['name']}\033[0m (v{s['version']}) - {s.get('description', 'No description')}")
+        except Exception as e:
+            print(f"Error loading shared scripts: {e}", file=sys.stderr)
+    
     if args.community:
         print()
         print("Community Scripts:")
@@ -699,6 +715,85 @@ def cmd_audit_secret(args):
         print(f"Error: {e}", file=sys.stderr)
         sys.exit(1)
 
+def cmd_list_shares(args):
+    """List script access control"""
+    config = load_config()
+    if not config.get('SHEBANG_CLIENT_ID'):
+        print("Error: Not logged in. Run: shebang login", file=sys.stderr)
+        sys.exit(1)
+    
+    client = ShebangClient(url=config['SHEBANG_URL'].replace('https://', '').replace('http://', ''))
+    client.session.auth = (config['SHEBANG_CLIENT_ID'], config['SHEBANG_CLIENT_SECRET'])
+    
+    try:
+        # Find script by name
+        scripts = client.list_scripts() or []
+        script = next((s for s in scripts if s['name'] == args.script), None)
+        
+        if not script:
+            print(f"Error: Script '{args.script}' not found", file=sys.stderr)
+            sys.exit(1)
+        
+        access_list = client.list_script_access(script['id'])
+        
+        if not access_list:
+            print(f"Script '{args.script}' is not shared")
+            return
+        
+        print(f"Access for '{args.script}':")
+        print("=" * 50)
+        for access in access_list:
+            if access['access_type'] == 'link':
+                print("• Anyone with link")
+            else:
+                print(f"• {access['username']}")
+                
+    except Exception as e:
+        print(f"Error: {e}", file=sys.stderr)
+        sys.exit(1)
+
+def cmd_share(args):
+    """Manage script sharing"""
+    config = load_config()
+    if not config.get('SHEBANG_CLIENT_ID'):
+        print("Error: Not logged in. Run: shebang login", file=sys.stderr)
+        sys.exit(1)
+    
+    if not args.user:
+        print("Error: Must specify at least one user with -u", file=sys.stderr)
+        sys.exit(1)
+    
+    client = ShebangClient(url=config['SHEBANG_URL'].replace('https://', '').replace('http://', ''))
+    client.session.auth = (config['SHEBANG_CLIENT_ID'], config['SHEBANG_CLIENT_SECRET'])
+    
+    try:
+        # Find script by name
+        scripts = client.list_scripts() or []
+        script = next((s for s in scripts if s['name'] == args.script), None)
+        
+        if not script:
+            print(f"Error: Script '{args.script}' not found", file=sys.stderr)
+            sys.exit(1)
+        
+        if args.remove:
+            # Remove access
+            access_list = client.list_script_access(script['id'])
+            for username in args.user:
+                access = next((a for a in access_list if a.get('username') == username), None)
+                if access:
+                    client.remove_script_access(script['id'], access['id'])
+                    print(f"✓ Removed access for {username}")
+                else:
+                    print(f"Warning: {username} doesn't have access", file=sys.stderr)
+        else:
+            # Add access
+            client.add_script_access(script['id'], args.user)
+            print(f"✓ Shared '{args.script}' with {', '.join(args.user)}")
+            
+    except Exception as e:
+        print(f"Error: {e}", file=sys.stderr)
+        sys.exit(1)
+
 def main():
     parser = argparse.ArgumentParser(
         prog='shebang',
@@ -714,6 +809,7 @@ def main():
     # List
     list_parser = subparsers.add_parser('list', help='List scripts')
     list_parser.add_argument('-c', '--community', action='store_true', help='Include community scripts')
+    list_parser.add_argument('-i', '--hide-shared', action='store_true', help='Hide shared scripts')
     
     # Search
     search_parser = subparsers.add_parser('search', help='Search scripts')
@@ -789,6 +885,16 @@ def main():
     audit_secret_parser = subparsers.add_parser('audit-secret', help='View secret audit log')
     audit_secret_parser.add_argument('name', help='Secret name')
     
+    # List shares
+    list_shares_parser = subparsers.add_parser('list-shares', help='List script access control')
+    list_shares_parser.add_argument('script', help='Script name')
+    
+    # Share
+    share_parser = subparsers.add_parser('share', help='Manage script sharing')
+    share_parser.add_argument('script', help='Script name')
+    share_parser.add_argument('-u', '--user', action='append', help='Username to share with (can specify multiple)')
+    share_parser.add_argument('-r', '--remove', action='store_true', help='Remove user access instead of adding')
+    
     args = parser.parse_args()
     
     if not args.command:
@@ -825,6 +931,10 @@ def main():
         cmd_delete_secret(args)
     elif args.command == 'audit-secret':
         cmd_audit_secret(args)
+    elif args.command == 'list-shares':
+        cmd_list_shares(args)
+    elif args.command == 'share':
+        cmd_share(args)
 
 if __name__ == '__main__':
     main()
