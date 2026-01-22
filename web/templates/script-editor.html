@@ -28,7 +28,7 @@
                     <label class="block text-sm font-medium mb-2">Visibility</label>
                     <select x-model="script.visibility" @change="visibilityChanged" class="w-full px-3 py-2 border rounded focus:ring-2 focus:ring-indigo-500">
                         <option value="private">Private - Only you can access</option>
-                        <option value="unlisted">Unlisted - Anyone with the link</option>
+                        <option value="unlisted">Unlisted</option>
                         <option value="public">Public - Listed and searchable</option>
                     </select>
                 </div>
@@ -40,7 +40,7 @@
                     
                     <div>
                         <label class="block text-sm font-medium mb-2">Select Key for Encryption</label>
-                        <select x-model="script.keypair_id" required class="w-full px-3 py-2 border rounded focus:ring-2 focus:ring-indigo-500">
+                        <select x-model="script.keypair_id" :required="script.visibility === 'private'" class="w-full px-3 py-2 border rounded focus:ring-2 focus:ring-indigo-500">
                             <option value="">-- Select a key --</option>
                             <template x-for="key in keys" :key="key.id">
                                 <option :value="key.id" x-text="key.name"></option>
