@@ -501,6 +501,122 @@ def cmd_delete(args):
         print(f"Error: {e}", file=sys.stderr)
         sys.exit(1)
 
+def cmd_list_secrets(args):
+    """List secrets"""
+    config = load_config()
+    if not config.get('SHEBANG_CLIENT_ID'):
+        print("Error: Not logged in. Run: shebang login", file=sys.stderr)
+        sys.exit(1)
+    
+    client = ShebangClient(url=config['SHEBANG_URL'].replace('https://', '').replace('http://', ''))
+    client.session.auth = (config['SHEBANG_CLIENT_ID'], config['SHEBANG_CLIENT_SECRET'])
+    
+    try:
+        secrets = client.list_secrets()
+        if not secrets:
+            print("No secrets found")
+            return
+        
+        for secret in secrets:
+            print(f"{secret['key_name']}")
+            print(f"  Last accessed: {secret.get('last_accessed', 'Never')}")
+            if secret.get('expires_at'):
+                print(f"  Expires: {secret['expires_at']}")
+            print()
+    except Exception as e:
+        print(f"Error: {e}", file=sys.stderr)
+        sys.exit(1)
+
+def cmd_get_secret(args):
+    """Get secret value"""
+    config = load_config()
+    if not config.get('SHEBANG_CLIENT_ID'):
+        print("Error: Not logged in. Run: shebang login", file=sys.stderr)
+        sys.exit(1)
+    
+    client = ShebangClient(url=config['SHEBANG_URL'].replace('https://', '').replace('http://', ''))
+    client.session.auth = (config['SHEBANG_CLIENT_ID'], config['SHEBANG_CLIENT_SECRET'])
+    
+    try:
+        value = client.get_secret(args.name)
+        print(value)
+    except Exception as e:
+        print(f"Error: {e}", file=sys.stderr)
+        sys.exit(1)
+
+def cmd_put_secret(args):
+    """Create or update secret"""
+    config = load_config()
+    if not config.get('SHEBANG_CLIENT_ID'):
+        print("Error: Not logged in. Run: shebang login", file=sys.stderr)
+        sys.exit(1)
+    
+    # Get value
+    if args.stdin:
+        value = sys.stdin.read().strip()
+    elif args.value:
+        value = args.value
+    else:
+        print("Error: Must specify -v/--value or -s/--stdin", file=sys.stderr)
+        sys.exit(1)
+    
+    client = ShebangClient(url=config['SHEBANG_URL'].replace('https://', '').replace('http://', ''))
+    client.session.auth = (config['SHEBANG_CLIENT_ID'], config['SHEBANG_CLIENT_SECRET'])
+    
+    try:
+        client.create_secret(args.name, value, args.expires)
+        print(f"✓ Secret '{args.name}' saved")
+    except Exception as e:
+        print(f"Error: {e}", file=sys.stderr)
+        sys.exit(1)
+
+def cmd_delete_secret(args):
+    """Delete secret"""
+    config = load_config()
+    if not config.get('SHEBANG_CLIENT_ID'):
+        print("Error: Not logged in. Run: shebang login", file=sys.stderr)
+        sys.exit(1)
+    
+    if not args.accept:
+        confirm = input(f"Delete secret '{args.name}'? (y/N): ").strip().lower()
+        if confirm != 'y':
+            print("Cancelled")
+            sys.exit(0)
+    
+    client = ShebangClient(url=config['SHEBANG_URL'].replace('https://', '').replace('http://', ''))
+    client.session.auth = (config['SHEBANG_CLIENT_ID'], config['SHEBANG_CLIENT_SECRET'])
+    
+    try:
+        client.delete_secret(args.name)
+        print(f"✓ Secret '{args.name}' deleted")
+    except Exception as e:
+        print(f"Error: {e}", file=sys.stderr)
+        sys.exit(1)
+
+def cmd_audit_secret(args):
+    """View secret audit log"""
+    config = load_config()
+    if not config.get('SHEBANG_CLIENT_ID'):
+        print("Error: Not logged in. Run: shebang login", file=sys.stderr)
+        sys.exit(1)
+    
+    client = ShebangClient(url=config['SHEBANG_URL'].replace('https://', '').replace('http://', ''))
+    client.session.auth = (config['SHEBANG_CLIENT_ID'], config['SHEBANG_CLIENT_SECRET'])
+    
+    try:
+        logs = client.get_secret_audit(args.name)
+        if not logs:
+            print("No audit logs found")
+            return
+        
+        print(f"Audit log for '{args.name}':")
+        print()
+        for log in logs:
+            print(f"{log['accessed_at']} - {log['action']} from {log['ip_address']}")
+    except Exception as e:
+        print(f"Error: {e}", file=sys.stderr)
+        sys.exit(1)
+
 def main():
     parser = argparse.ArgumentParser(
         prog='shebang',
@@ -564,6 +680,29 @@ def main():
     delete_parser.add_argument('script', help='Script name')
     delete_parser.add_argument('-a', '--accept', action='store_true', help='Skip confirmation')
     
+    # List secrets
+    subparsers.add_parser('list-secrets', help='List your secrets')
+    
+    # Get secret
+    get_secret_parser = subparsers.add_parser('get-secret', help='Get secret value')
+    get_secret_parser.add_argument('name', help='Secret name')
+    
+    # Put secret
+    put_secret_parser = subparsers.add_parser('put-secret', help='Create or update a secret')
+    put_secret_parser.add_argument('name', help='Secret name')
+    put_secret_parser.add_argument('-v', '--value', help='Secret value')
+    put_secret_parser.add_argument('-s', '--stdin', action='store_true', help='Read value from stdin')
+    put_secret_parser.add_argument('-e', '--expires', help='Expiration date (ISO format)')
+    
+    # Delete secret
+    delete_secret_parser = subparsers.add_parser('delete-secret', help='Delete a secret')
+    delete_secret_parser.add_argument('name', help='Secret name')
+    delete_secret_parser.add_argument('-a', '--accept', action='store_true', help='Skip confirmation')
+    
+    # Audit secret
+    audit_secret_parser = subparsers.add_parser('audit-secret', help='View secret audit log')
+    audit_secret_parser.add_argument('name', help='Secret name')
+    
     args = parser.parse_args()
     
     if not args.command:
@@ -590,6 +729,16 @@ def main():
         cmd_put(args)
     elif args.command == 'delete':
         cmd_delete(args)
+    elif args.command == 'list-secrets':
+        cmd_list_secrets(args)
+    elif args.command == 'get-secret':
+        cmd_get_secret(args)
+    elif args.command == 'put-secret':
+        cmd_put_secret(args)
+    elif args.command == 'delete-secret':
+        cmd_delete_secret(args)
+    elif args.command == 'audit-secret':
+        cmd_audit_secret(args)
 
 if __name__ == '__main__':
     main()

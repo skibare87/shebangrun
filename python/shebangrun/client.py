@@ -226,6 +226,44 @@ class ShebangClient:
         response = self.session.post(url, json={"name": name})
         response.raise_for_status()
         return response.json()
+    
+    # Secrets Management
+    def list_secrets(self) -> list:
+        """List all secrets"""
+        url = f"{self.base_url}/api/secrets"
+        response = self.session.get(url)
+        response.raise_for_status()
+        return response.json()
+    
+    def create_secret(self, key_name: str, value: str, expires_at: Optional[str] = None) -> dict:
+        """Create or update a secret"""
+        url = f"{self.base_url}/api/secrets"
+        payload = {"key_name": key_name, "value": value}
+        if expires_at:
+            payload["expires_at"] = expires_at
+        response = self.session.post(url, json=payload)
+        response.raise_for_status()
+        return response.json()
+    
+    def get_secret(self, key_name: str) -> str:
+        """Get secret value"""
+        url = f"{self.base_url}/api/secrets/{key_name}/value"
+        response = self.session.get(url)
+        response.raise_for_status()
+        return response.json()["value"]
+    
+    def delete_secret(self, key_name: str):
+        """Delete a secret"""
+        url = f"{self.base_url}/api/secrets/{key_name}"
+        response = self.session.delete(url)
+        response.raise_for_status()
+    
+    def get_secret_audit(self, key_name: str) -> list:
+        """Get audit log for a secret"""
+        url = f"{self.base_url}/api/secrets/{key_name}/audit"
+        response = self.session.get(url)
+        response.raise_for_status()
+        return response.json()
 
 
 def run(username: str, script: str, key: Optional[str] = None, 
