@@ -9,6 +9,7 @@ import (
 	"shebang.run/internal/auth"
 	"shebang.run/internal/config"
 	"shebang.run/internal/database"
+	"shebang.run/internal/middleware"
 )
 
 type AuthHandler struct {
@@ -323,6 +324,17 @@ func (h *AuthHandler) OAuthCallback(w http.ResponseWriter, r *http.Request, prov
 		return
 	}
 
+	// Check if username needs to be set (starts with email prefix or has provider suffix)
+	needsUsername := strings.Contains(user.Username, "@") || 
+	                 strings.HasSuffix(user.Username, "_"+provider) ||
+	                 strings.Contains(user.Username, "_github") ||
+	                 strings.Contains(user.Username, "_google")
+	
+	redirectPath := "/dashboard"
+	if needsUsername {
+		redirectPath = "/select-username?temp_token=" + jwtToken
+	}
+
 	// Create HTML page that stores token and redirects
 	html := fmt.Sprintf(`
 <!DOCTYPE html>
@@ -330,19 +342,26 @@ func (h *AuthHandler) OAuthCallback(w http.ResponseWriter, r *http.Request, prov
 <head><title>Login Success</title></head>
 <body>
 <script>
-localStorage.setItem('token', '%s');
+%s
+window.location.href = '%s';
+</script>
+<p>Logging in...</p>
+</body>
+</html>
+`, 
+	func() string {
+		if !needsUsername {
+			return fmt.Sprintf(`localStorage.setItem('token', '%s');
 localStorage.setItem('user', JSON.stringify({
 	id: %d,
 	username: '%s',
 	email: '%s',
 	is_admin: %t
-}));
-window.location.href = '/dashboard';
-</script>
-<p>Logging in...</p>
-</body>
-</html>
-`, jwtToken, user.ID, user.Username, user.Email, user.IsAdmin)
+}));`, jwtToken, user.ID, user.Username, user.Email, user.IsAdmin)
+		}
+		return ""
+	}(),
+	redirectPath)
 
 	w.Header().Set("Content-Type", "text/html")
 	w.Write([]byte(html))

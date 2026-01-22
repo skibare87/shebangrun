@@ -141,7 +141,7 @@ func main() {
 		r.Post("/register", authHandler.Register)
 		r.Post("/login", authHandler.Login)
 		r.Get("/check-username", authHandler.CheckUsername)
-		r.Post("/set-username", authHandler.SetUsername)
+		r.With(middleware.AuthMiddleware(cfg.JWTSecret, db)).Post("/set-username", authHandler.SetUsername)
 		r.Get("/oauth/github", func(w http.ResponseWriter, r *http.Request) {
 			authHandler.OAuthLogin(w, r, "github")
 		})

@@ -80,6 +80,11 @@ func (db *DB) IsFirstUser() (bool, error) {
 	return count == 0, err
 }
 
+func (db *DB) UpdateUsername(userID int64, username string) error {
+	_, err := db.Exec("UPDATE users SET username = ? WHERE id = ?", username, userID)
+	return err
+}
+
 func (db *DB) ListUsers(limit, offset int) ([]*User, error) {
 	rows, err := db.Query(
 		"SELECT id, username, email, password_hash, COALESCE(oauth_provider, ''), COALESCE(oauth_id, ''), is_admin, rate_limit, created_at FROM users ORDER BY created_at DESC LIMIT ? OFFSET ?",
