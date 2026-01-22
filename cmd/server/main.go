@@ -60,6 +60,7 @@ func main() {
 	accountHandler := api.NewAccountHandler(db, cfg)
 	setupHandler := api.NewSetupHandler(db)
 	communityHandler := api.NewCommunityHandler(db)
+	shareHandler := api.NewShareHandler(db.DB)
 	webHandler := api.NewWebHandler()
 	
 	var secretsHandler *api.SecretsHandler
@@ -174,6 +175,17 @@ func main() {
 		r.Delete("/{id}", scriptHandler.Delete)
 		r.Post("/{id}/share", scriptHandler.GenerateShareToken)
 		r.Delete("/{id}/share/{token}", scriptHandler.RevokeShareToken)
+		
+		// New ACL-based sharing
+		r.Get("/{id}/access", shareHandler.GetAccess)
+		r.Post("/{id}/access", shareHandler.AddAccess)
+		r.Delete("/{id}/access/{access_id}", shareHandler.RemoveAccess)
+	})
+	
+	// User search for sharing
+	r.Route("/api/users", func(r chi.Router) {
+		r.Use(middleware.AuthMiddleware(cfg.JWTSecret, db))
+		r.Get("/search", shareHandler.SearchUsers)
 	})
 
 	r.Route("/api/admin", func(r chi.Router) {

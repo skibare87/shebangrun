@@ -78,6 +78,7 @@
                     <a :href="'/script-editor?id=' + script.id" class="text-indigo-600 hover:text-indigo-700 text-sm">Edit</a>
                     <button @click="viewScript(script)" class="text-blue-600 hover:text-blue-700 text-sm">View</button>
                     <button @click="copyUrl(script)" class="text-green-600 hover:text-green-700 text-sm">Copy URL</button>
+                    <button x-show="script.visibility === 'unlisted'" @click="shareScript(script)" class="text-purple-600 hover:text-purple-700 text-sm">Share</button>
                     <button @click="deleteScript(script.id)" class="text-red-600 hover:text-red-700 text-sm">Delete</button>
                 </div>
             </div>
@@ -106,6 +107,73 @@
             </div>
         </div>
     </div>
+    
+    <!-- Share Modal -->
+    <div x-show="shareModal" @click.away="shareModal = false" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50" style="display: none;">
+        <div class="bg-white p-8 rounded-lg max-w-2xl w-full" @click.stop>
+            <div class="flex justify-between items-start mb-4">
+                <h2 class="text-2xl font-bold">Share Script: <span x-text="currentScript?.name"></span></h2>
+                <button @click="shareModal = false" class="text-gray-500 hover:text-gray-700">✕</button>
+            </div>
+            
+            <div class="mb-6">
+                <label class="flex items-center space-x-2 mb-4">
+                    <input type="radio" x-model="shareType" value="link" class="form-radio">
+                    <span>Anyone with link</span>
+                </label>
+                <label class="flex items-center space-x-2">
+                    <input type="radio" x-model="shareType" value="user" class="form-radio">
+                    <span>Specific users</span>
+                </label>
+            </div>
+            
+            <div x-show="shareType === 'user'" class="mb-4">
+                <label class="block text-sm font-medium mb-2">Search users</label>
+                <input type="text" 
+                       x-model="userSearch" 
+                       @input.debounce.300ms="searchUsers"
+                       placeholder="Type username..."
+                       class="w-full px-3 py-2 border rounded">
+                
+                <div x-show="userSearchResults.length > 0" class="mt-2 border rounded max-h-40 overflow-y-auto">
+                    <template x-for="username in userSearchResults" :key="username">
+                        <div @click="addUser(username)" class="px-3 py-2 hover:bg-gray-100 cursor-pointer" x-text="username"></div>
+                    </template>
+                </div>
+                
+                <div class="mt-4">
+                    <label class="block text-sm font-medium mb-2">Selected users:</label>
+                    <div class="space-y-2">
+                        <template x-for="username in selectedUsers" :key="username">
+                            <div class="flex justify-between items-center bg-gray-100 px-3 py-2 rounded">
+                                <span x-text="username"></span>
+                                <button @click="removeUser(username)" class="text-red-600 hover:text-red-800">✕</button>
+                            </div>
+                        </template>
+                        <div x-show="selectedUsers.length === 0" class="text-sm text-gray-500">No users selected</div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="mb-4">
+                <label class="block text-sm font-medium mb-2">Current access:</label>
+                <div class="space-y-2 max-h-40 overflow-y-auto">
+                    <template x-for="access in currentAccess" :key="access.id">
+                        <div class="flex justify-between items-center bg-blue-50 px-3 py-2 rounded text-sm">
+                            <span x-text="access.access_type === 'link' ? 'Anyone with link' : access.username"></span>
+                            <button @click="removeAccess(access.id)" class="text-red-600 hover:text-red-800">Remove</button>
+                        </div>
+                    </template>
+                    <div x-show="!currentAccess || currentAccess.length === 0" class="text-sm text-gray-500">Not shared</div>
+                </div>
+            </div>
+            
+            <div class="flex justify-end space-x-2">
+                <button @click="shareModal = false" class="px-4 py-2 border rounded hover:bg-gray-50">Cancel</button>
+                <button @click="saveShare()" class="px-4 py-2 bg-indigo-600 text-white rounded hover:bg-indigo-700">Save</button>
+            </div>
+        </div>
+    </div>
 </div>
 
 <script>
@@ -115,10 +183,16 @@ function dashboard() {
         searchQuery: '',
         visibilityFilter: 'all',
         viewModal: false,
+        shareModal: false,
         currentScript: null,
         scriptContent: '',
         showToast: false,
         toastMessage: '',
+        shareType: 'link',
+        userSearch: '',
+        userSearchResults: [],
+        selectedUsers: [],
+        currentAccess: [],
         
         get filteredScripts() {
             let filtered = this.scripts;
@@ -241,6 +315,83 @@ function dashboard() {
                 headers: { 'Authorization': 'Bearer ' + getToken() }
             })
             .then(() => this.loadScripts());
+        },
+        
+        async shareScript(script) {
+            this.currentScript = script;
+            this.shareType = 'link';
+            this.selectedUsers = [];
+            this.userSearch = '';
+            this.userSearchResults = [];
+            
+            // Load current access
+            const response = await fetch(`/api/scripts/${script.id}/access`, {
+                headers: { 'Authorization': 'Bearer ' + getToken() }
+            });
+            if (response.ok) {
+                this.currentAccess = await response.json();
+            }
+            
+            this.shareModal = true;
+        },
+        
+        async searchUsers() {
+            if (!this.userSearch || this.userSearch.length < 2) {
+                this.userSearchResults = [];
+                return;
+            }
+            
+            const response = await fetch(`/api/users/search?q=${encodeURIComponent(this.userSearch)}`, {
+                headers: { 'Authorization': 'Bearer ' + getToken() }
+            });
+            if (response.ok) {
+                this.userSearchResults = await response.json();
+            }
+        },
+        
+        addUser(username) {
+            if (!this.selectedUsers.includes(username)) {
+                this.selectedUsers.push(username);
+            }
+            this.userSearch = '';
+            this.userSearchResults = [];
+        },
+        
+        removeUser(username) {
+            this.selectedUsers = this.selectedUsers.filter(u => u !== username);
+        },
+        
+        async saveShare() {
+            const payload = {
+                access_type: this.shareType,
+                usernames: this.shareType === 'user' ? this.selectedUsers : []
+            };
+            
+            const response = await fetch(`/api/scripts/${this.currentScript.id}/access`, {
+                method: 'POST',
+                headers: {
+                    'Authorization': 'Bearer ' + getToken(),
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(payload)
+            });
+            
+            if (response.ok) {
+                this.shareModal = false;
+                this.showToastMessage('Sharing updated');
+            }
+        },
+        
+        async removeAccess(accessId) {
+            const response = await fetch(`/api/scripts/${this.currentScript.id}/access/${accessId}`, {
+                method: 'DELETE',
+                headers: { 'Authorization': 'Bearer ' + getToken() }
+            });
+            
+            if (response.ok) {
+                this.currentAccess = this.currentAccess.filter(a => a.id !== accessId);
+                this.showToastMessage('Access removed');
+            }
         }
     }
 }
