@@ -108,8 +108,17 @@ func (h *AuthHandler) CheckUsername(w http.ResponseWriter, r *http.Request) {
 	}
 	
 	// Check if username exists
-	_, err := h.db.GetUserByUsername(username)
+	existingUser, err := h.db.GetUserByUsername(username)
 	available := err != nil // Available if user not found
+	
+	// If authenticated, allow current user's username
+	if authHeader := r.Header.Get("Authorization"); authHeader != "" {
+		tokenString := strings.TrimPrefix(authHeader, "Bearer ")
+		claims, err := auth.ValidateToken(tokenString, h.cfg.JWTSecret)
+		if err == nil && existingUser != nil && existingUser.ID == claims.UserID {
+			available = true
+		}
+	}
 	
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(map[string]bool{"available": available})

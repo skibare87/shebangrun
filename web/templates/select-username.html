@@ -44,7 +44,12 @@ function usernameSelection() {
                 return;
             }
             
-            const response = await fetch(`/api/auth/check-username?username=${encodeURIComponent(this.username)}`);
+            const headers = {};
+            if (this.tempToken) {
+                headers['Authorization'] = `Bearer ${this.tempToken}`;
+            }
+            
+            const response = await fetch(`/api/auth/check-username?username=${encodeURIComponent(this.username)}`, { headers });
             const data = await response.json();
             this.usernameAvailable = data.available;
             this.usernameChecked = true;
