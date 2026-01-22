@@ -99,6 +99,83 @@ func (h *AuthHandler) Register(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
+func (h *AuthHandler) CheckUsername(w http.ResponseWriter, r *http.Request) {
+	username := r.URL.Query().Get("username")
+	if username == "" {
+		http.Error(w, "Username required", http.StatusBadRequest)
+		return
+	}
+	
+	// Check if username exists
+	_, err := h.db.GetUserByUsername(username)
+	available := err != nil // Available if user not found
+	
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(map[string]bool{"available": available})
+}
+
+func (h *AuthHandler) SetUsername(w http.ResponseWriter, r *http.Request) {
+	// This endpoint is for OAuth users to set their username after first login
+	// Extract user ID from temp token
+	claims, ok := middleware.GetUserFromContext(r.Context())
+	if !ok {
+		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+		return
+	}
+	
+	var req struct {
+		Username string `json:"username"`
+	}
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		http.Error(w, "Invalid request", http.StatusBadRequest)
+		return
+	}
+	
+	if req.Username == "" || len(req.Username) < 3 {
+		http.Error(w, "Username must be at least 3 characters", http.StatusBadRequest)
+		return
+	}
+	
+	// Check if username is available
+	_, err := h.db.GetUserByUsername(req.Username)
+	if err == nil {
+		http.Error(w, "Username already taken", http.StatusConflict)
+		return
+	}
+	
+	// Update username
+	err = h.db.UpdateUsername(claims.UserID, req.Username)
+	if err != nil {
+		http.Error(w, "Failed to update username", http.StatusInternalServerError)
+		return
+	}
+	
+	// Get updated user
+	user, err := h.db.GetUserByID(claims.UserID)
+	if err != nil {
+		http.Error(w, "Failed to get user", http.StatusInternalServerError)
+		return
+	}
+	
+	// Generate new token with updated username
+	token, err := auth.GenerateToken(user.ID, user.Username, user.IsAdmin, h.cfg.JWTSecret)
+	if err != nil {
+		http.Error(w, "Failed to generate token", http.StatusInternalServerError)
+		return
+	}
+	
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(AuthResponse{
+		Token: token,
+		User: map[string]interface{}{
+			"id":       user.ID,
+			"username": user.Username,
+			"email":    user.Email,
+			"is_admin": user.IsAdmin,
+		},
+	})
+}
+
 func (h *AuthHandler) Login(w http.ResponseWriter, r *http.Request) {
 	var req LoginRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {

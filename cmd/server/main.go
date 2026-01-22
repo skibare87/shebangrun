@@ -126,6 +126,7 @@ func main() {
 		r.Get("/community", webHandler.Community)
 		r.Get("/keys", webHandler.Keys)
 		r.Get("/secrets", webHandler.Secrets)
+		r.Get("/select-username", webHandler.SelectUsername)
 		r.Get("/account", webHandler.Account)
 		r.Get("/script-editor", webHandler.ScriptEditor)
 		r.Get("/privacy", webHandler.Privacy)
@@ -139,6 +140,8 @@ func main() {
 	r.Route("/api/auth", func(r chi.Router) {
 		r.Post("/register", authHandler.Register)
 		r.Post("/login", authHandler.Login)
+		r.Get("/check-username", authHandler.CheckUsername)
+		r.Post("/set-username", authHandler.SetUsername)
 		r.Get("/oauth/github", func(w http.ResponseWriter, r *http.Request) {
 			authHandler.OAuthLogin(w, r, "github")
 		})

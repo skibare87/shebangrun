@@ -3,6 +3,7 @@ package api
 import (
 	"database/sql"
 	"encoding/json"
+	"log"
 	"net/http"
 	"time"
 	
@@ -86,6 +87,7 @@ func (h *SecretsHandler) Create(w http.ResponseWriter, r *http.Request) {
 	// Get UDEK
 	udek, err := h.udekManager.GetOrCreateUDEK(claims.UserID)
 	if err != nil {
+		log.Printf("Error getting UDEK for user %d: %v", claims.UserID, err)
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
@@ -93,6 +95,7 @@ func (h *SecretsHandler) Create(w http.ResponseWriter, r *http.Request) {
 	// Encrypt value
 	encrypted, err := crypto.EncryptWithUDEK([]byte(req.Value), udek)
 	if err != nil {
+		log.Printf("Error encrypting secret: %v", err)
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
