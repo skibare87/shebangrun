@@ -759,8 +759,8 @@ def cmd_share(args):
         print("Error: Not logged in. Run: shebang login", file=sys.stderr)
         sys.exit(1)
     
-    if not args.user:
-        print("Error: Must specify at least one user with -u", file=sys.stderr)
+    if not args.user and not args.link:
+        print("Error: Must specify -u/--user or -l/--link", file=sys.stderr)
         sys.exit(1)
     
     client = ShebangClient(url=config['SHEBANG_URL'].replace('https://', '').replace('http://', ''))
@@ -775,20 +775,42 @@ def cmd_share(args):
             print(f"Error: Script '{args.script}' not found", file=sys.stderr)
             sys.exit(1)
         
-        if args.remove:
-            # Remove access
-            access_list = client.list_script_access(script['id'])
-            for username in args.user:
-                access = next((a for a in access_list if a.get('username') == username), None)
-                if access:
-                    client.remove_script_access(script['id'], access['id'])
-                    print(f"✓ Removed access for {username}")
+        if args.link:
+            if args.remove:
+                # Remove link sharing
+                access_list = client.list_script_access(script['id'])
+                link_access = next((a for a in access_list if a['access_type'] == 'link'), None)
+                if link_access:
+                    client.remove_script_access(script['id'], link_access['id'])
+                    print(f"✓ Removed 'anyone with link' access")
                 else:
-                    print(f"Warning: {username} doesn't have access", file=sys.stderr)
-        else:
-            # Add access
-            client.add_script_access(script['id'], args.user)
-            print(f"✓ Shared '{args.script}' with {', '.join(args.user)}")
+                    print("Link sharing is not enabled")
+            else:
+                # Add link sharing
+                import requests
+                response = requests.post(
+                    f"{config['SHEBANG_URL']}/api/scripts/{script['id']}/access",
+                    auth=(config['SHEBANG_CLIENT_ID'], config['SHEBANG_CLIENT_SECRET']),
+                    json={"access_type": "link"}
+                )
+                response.raise_for_status()
+                print(f"✓ Enabled 'anyone with link' sharing")
+        
+        elif args.user:
+            if args.remove:
+                # Remove user access
+                access_list = client.list_script_access(script['id'])
+                for username in args.user:
+                    access = next((a for a in access_list if a.get('username') == username), None)
+                    if access:
+                        client.remove_script_access(script['id'], access['id'])
+                        print(f"✓ Removed access for {username}")
+                    else:
+                        print(f"Warning: {username} doesn't have access", file=sys.stderr)
+            else:
+                # Add user access
+                client.add_script_access(script['id'], args.user)
+                print(f"✓ Shared '{args.script}' with {', '.join(args.user)}")
             
     except Exception as e:
         print(f"Error: {e}", file=sys.stderr)
@@ -893,7 +915,8 @@ def main():
     share_parser = subparsers.add_parser('share', help='Manage script sharing')
     share_parser.add_argument('script', help='Script name')
     share_parser.add_argument('-u', '--user', action='append', help='Username to share with (can specify multiple)')
-    share_parser.add_argument('-r', '--remove', action='store_true', help='Remove user access instead of adding')
+    share_parser.add_argument('-l', '--link', action='store_true', help='Enable "anyone with link" sharing')
+    share_parser.add_argument('-r', '--remove', action='store_true', help='Remove access instead of adding')
     
     args = parser.parse_args()
     
