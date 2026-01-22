@@ -7,6 +7,7 @@ import sys
 import os
 import argparse
 import json
+import re
 from pathlib import Path
 
 try:
@@ -17,6 +18,31 @@ except ImportError:
     sys.exit(1)
 
 CONFIG_FILE = Path.home() / '.shebangrc'
+
+
+def substitute_secrets(content, config):
+    """Substitute ${SECRET:name} with actual secret values"""
+    if not config.get('SHEBANG_CLIENT_ID'):
+        print("Warning: Not logged in, cannot substitute secrets", file=sys.stderr)
+        return content
+    
+    client = ShebangClient(url=config['SHEBANG_URL'].replace('https://', '').replace('http://', ''))
+    client.session.auth = (config['SHEBANG_CLIENT_ID'], config['SHEBANG_CLIENT_SECRET'])
+    
+    # Find all ${SECRET:name} patterns
+    pattern = re.compile(r'\$\{SECRET:([A-Za-z0-9_]+)\}')
+    
+    def replace_secret(match):
+        secret_name = match.group(1)
+        try:
+            value = client.get_secret(secret_name)
+            return value
+        except Exception as e:
+            print(f"Warning: Could not retrieve secret '{secret_name}': {e}", file=sys.stderr)
+            return match.group(0)  # Return original if failed
+    
+    return pattern.sub(replace_secret, content)
+
 
 def load_config():
     """Load configuration from ~/.shebangrc"""
@@ -223,6 +249,10 @@ def cmd_get(args):
             key=key_content,
             url=config.get('SHEBANG_URL', 'shebang.run').replace('https://', '').replace('http://', '')
         )
+        
+        # Substitute secrets if requested
+        if args.secrets:
+            content = substitute_secrets(content, config)
         
         if args.output:
             with open(args.output, 'w') as f:
@@ -436,7 +466,7 @@ def cmd_put(args):
             sys.exit(1)
         
         # Check if script exists
-        scripts = client.list_scripts()
+        scripts = client.list_scripts() or []
         existing = next((s for s in scripts if s['name'] == args.name), None)
         
         if existing:
@@ -661,6 +691,7 @@ def main():
     get_parser.add_argument('-u', '--user', help='Username')
     get_parser.add_argument('-O', '--output', help='Output file')
     get_parser.add_argument('-k', '--key', help='Private key path')
+    get_parser.add_argument('-s', '--secrets', action='store_true', help='Substitute ${SECRET:name} with actual values')
     
     # Run
     run_parser = subparsers.add_parser('run', help='Download and execute a script')
