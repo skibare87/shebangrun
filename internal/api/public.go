@@ -8,6 +8,7 @@ import (
 	"strconv"
 	"strings"
 
+	"shebang.run/internal/auth"
 	"shebang.run/internal/config"
 	"shebang.run/internal/crypto"
 	"shebang.run/internal/database"
@@ -49,6 +50,24 @@ func (h *PublicHandler) GetScript(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		http.Error(w, "Script not found", http.StatusNotFound)
 		return
+	}
+
+	// Get current user ID if authenticated
+	var currentUserID *int64
+	if authHeader := r.Header.Get("Authorization"); authHeader != "" {
+		tokenString := strings.TrimPrefix(authHeader, "Bearer ")
+		if claims, err := auth.ValidateToken(tokenString, h.cfg.JWTSecret); err == nil {
+			currentUserID = &claims.UserID
+		}
+	}
+
+	// Check ACL for unlisted scripts
+	if script.Visibility == "unlisted" {
+		canAccess, err := h.db.CanAccessScript(script.ID, currentUserID)
+		if err != nil || !canAccess {
+			http.Error(w, "Unauthorized", http.StatusUnauthorized)
+			return
+		}
 	}
 
 	if script.Visibility == "private" {

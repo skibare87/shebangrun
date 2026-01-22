@@ -7,7 +7,6 @@ import (
 	"time"
 	
 	"github.com/go-chi/chi/v5"
-	"shebang.run/internal/database"
 	"shebang.run/internal/middleware"
 )
 
