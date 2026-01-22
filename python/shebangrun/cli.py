@@ -539,7 +539,24 @@ def cmd_get_secret(args):
     
     try:
         value = client.get_secret(args.name)
-        print(value)
+        
+        # Format output
+        if args.format == 'env':
+            output = f'{args.name}="{value}"'
+        elif args.format == 'json':
+            import json
+            output = json.dumps({args.name: value})
+        else:  # value
+            output = value
+        
+        # Write to file or stdout
+        if args.output:
+            with open(args.output, 'w') as f:
+                f.write(output)
+            print(f"✓ Secret written to {args.output}", file=sys.stderr)
+        else:
+            print(output)
+            
     except Exception as e:
         print(f"Error: {e}", file=sys.stderr)
         sys.exit(1)
@@ -686,6 +703,9 @@ def main():
     # Get secret
     get_secret_parser = subparsers.add_parser('get-secret', help='Get secret value')
     get_secret_parser.add_argument('name', help='Secret name')
+    get_secret_parser.add_argument('-O', '--output', help='Output to file')
+    get_secret_parser.add_argument('-f', '--format', choices=['value', 'env', 'json'], default='value', 
+                                   help='Output format (default: value)')
     
     # Put secret
     put_secret_parser = subparsers.add_parser('put-secret', help='Create or update a secret')
