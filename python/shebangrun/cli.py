@@ -238,9 +238,17 @@ def cmd_get(args):
     
     key_path = args.key or config.get('SHEBANG_KEY_PATH')
     key_content = None
-    if key_path and os.path.exists(key_path):
-        with open(key_path) as f:
-            key_content = f.read()
+    if key_path:
+        if not os.path.exists(key_path):
+            print(f"Error: Private key not found at: {key_path}", file=sys.stderr)
+            print("Update SHEBANG_KEY_PATH in ~/.shebangrc or use -k to specify key", file=sys.stderr)
+            sys.exit(1)
+        try:
+            with open(key_path) as f:
+                key_content = f.read()
+        except Exception as e:
+            print(f"Error: Could not read private key: {e}", file=sys.stderr)
+            sys.exit(1)
     
     try:
         content = run(
@@ -262,7 +270,15 @@ def cmd_get(args):
             print(content)
             
     except Exception as e:
-        print(f"Error: {e}", file=sys.stderr)
+        error_msg = str(e)
+        if "encrypted" in error_msg.lower() or "decrypt" in error_msg.lower():
+            print(f"Error: Failed to decrypt script", file=sys.stderr)
+            if not key_content:
+                print("This appears to be an encrypted script. Provide a private key with -k or set SHEBANG_KEY_PATH", file=sys.stderr)
+            else:
+                print(f"Decryption failed. Verify the key at {key_path} is correct for this script", file=sys.stderr)
+        else:
+            print(f"Error: {e}", file=sys.stderr)
         sys.exit(1)
 
 def cmd_run(args):
@@ -276,9 +292,17 @@ def cmd_run(args):
     
     key_path = args.key or config.get('SHEBANG_KEY_PATH')
     key_content = None
-    if key_path and os.path.exists(key_path):
-        with open(key_path) as f:
-            key_content = f.read()
+    if key_path:
+        if not os.path.exists(key_path):
+            print(f"Error: Private key not found at: {key_path}", file=sys.stderr)
+            print("Update SHEBANG_KEY_PATH in ~/.shebangrc or use -k to specify key", file=sys.stderr)
+            sys.exit(1)
+        try:
+            with open(key_path) as f:
+                key_content = f.read()
+        except Exception as e:
+            print(f"Error: Could not read private key: {e}", file=sys.stderr)
+            sys.exit(1)
     
     try:
         content = run(
@@ -337,7 +361,15 @@ def cmd_run(args):
         sys.exit(result.returncode)
         
     except Exception as e:
-        print(f"Error: {e}", file=sys.stderr)
+        error_msg = str(e)
+        if "encrypted" in error_msg.lower() or "decrypt" in error_msg.lower():
+            print(f"Error: Failed to decrypt script", file=sys.stderr)
+            if not key_content:
+                print("This appears to be an encrypted script. Provide a private key with -k or set SHEBANG_KEY_PATH", file=sys.stderr)
+            else:
+                print(f"Decryption failed. Verify the key at {key_path} is correct for this script", file=sys.stderr)
+        else:
+            print(f"Error: {e}", file=sys.stderr)
         sys.exit(1)
 
 def cmd_list_keys(args):
