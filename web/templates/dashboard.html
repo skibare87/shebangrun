@@ -106,8 +106,21 @@
             </div>
             <div class="mb-4">
                 <label class="block text-sm font-medium mb-2">Usage:</label>
-                <div class="bg-gray-900 text-green-400 p-4 rounded font-mono text-sm">
-                    <div x-text="'curl ' + window.location.origin + '/' + getUser().username + '/' + currentScript?.name + ' | sh'"></div>
+                <div class="bg-gray-900 text-green-400 p-4 rounded font-mono text-sm space-y-2">
+                    <div x-show="!currentScript?.shared">
+                        <div class="text-gray-500 mb-1"># Your script</div>
+                        <div>shebang get <span x-text="currentScript?.name"></span></div>
+                        <div>shebang run <span x-text="currentScript?.name"></span></div>
+                    </div>
+                    <div x-show="currentScript?.shared">
+                        <div class="text-gray-500 mb-1"># Shared script</div>
+                        <div>shebang get <span x-text="currentScript?.name"></span> -u <span x-text="currentScript?.owner"></span></div>
+                        <div>shebang run <span x-text="currentScript?.name"></span> -u <span x-text="currentScript?.owner"></span></div>
+                    </div>
+                    <div class="mt-2">
+                        <div class="text-gray-500 mb-1"># Or with curl</div>
+                        <div x-text="'curl ' + window.location.origin + '/' + (currentScript?.owner || getUser().username) + '/' + currentScript?.name + ' | sh'"></div>
+                    </div>
                 </div>
             </div>
             <div>
@@ -287,18 +300,23 @@ function dashboard() {
         
         viewScript(script) {
             this.currentScript = script;
-            const user = this.getUser();
-            fetch(`/${user.username}/${script.name}`)
+            const owner = script.owner || this.getUser().username;
+            fetch(`/${owner}/${script.name}`, {
+                headers: { 'Authorization': 'Bearer ' + getToken() }
+            })
                 .then(res => res.text())
                 .then(content => {
                     this.scriptContent = content;
                     this.viewModal = true;
+                })
+                .catch(err => {
+                    this.showToastMessage('Failed to load script');
                 });
         },
         
         copyUrl(script) {
-            const user = this.getUser();
-            const url = `${window.location.origin}/${user.username}/${script.name}`;
+            const owner = script.owner || this.getUser().username;
+            const url = `${window.location.origin}/${owner}/${script.name}`;
             if (navigator.clipboard && navigator.clipboard.writeText) {
                 navigator.clipboard.writeText(url).then(() => {
                     this.showToastMessage('URL copied to clipboard!');
