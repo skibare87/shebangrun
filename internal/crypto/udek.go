@@ -5,7 +5,7 @@ import (
 	"database/sql"
 	"errors"
 	
-	"github.com/skibare87/shebangrun/internal/kms"
+	"shebang.run/internal/kms"
 )
 
 // UDEKManager handles User Data Encryption Keys
@@ -79,7 +79,7 @@ func EncryptWithUDEK(plaintext []byte, udek []byte) ([]byte, error) {
 	}
 	
 	// Use ChaCha20-Poly1305 for content encryption
-	return EncryptChaCha20(plaintext, udek)
+	return EncryptData(plaintext, udek)
 }
 
 // DecryptWithUDEK decrypts data with a UDEK
@@ -88,5 +88,5 @@ func DecryptWithUDEK(ciphertext []byte, udek []byte) ([]byte, error) {
 		return nil, errors.New("UDEK must be 32 bytes")
 	}
 	
-	return DecryptChaCha20(ciphertext, udek)
+	return DecryptData(ciphertext, udek)
 }

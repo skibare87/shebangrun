@@ -7,7 +7,7 @@ import (
 	"time"
 	
 	"github.com/go-chi/chi/v5"
-	"github.com/skibare87/shebangrun/internal/crypto"
+	"shebang.run/internal/crypto"
 )
 
 type SecretsHandler struct {
