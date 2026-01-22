@@ -146,9 +146,9 @@ func (h *AuthHandler) SetUsername(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	
-	// Check if username is available
-	_, err := h.db.GetUserByUsername(req.Username)
-	if err == nil {
+	// Check if username is available (or is current user's username)
+	existingUser, err := h.db.GetUserByUsername(req.Username)
+	if err == nil && existingUser.ID != claims.UserID {
 		http.Error(w, "Username already taken", http.StatusConflict)
 		return
 	}
