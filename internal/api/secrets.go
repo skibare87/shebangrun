@@ -8,6 +8,7 @@ import (
 	
 	"github.com/go-chi/chi/v5"
 	"shebang.run/internal/crypto"
+	"shebang.run/internal/middleware"
 )
 
 type SecretsHandler struct {
@@ -39,12 +40,16 @@ type SecretResponse struct {
 }
 
 func (h *SecretsHandler) List(w http.ResponseWriter, r *http.Request) {
-	userID := r.Context().Value("user_id").(int64)
+	claims, ok := middleware.GetUserFromContext(r.Context())
+	if !ok {
+		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+		return
+	}
 	
 	rows, err := h.db.Query(`
 		SELECT id, key_name, version, created_at, updated_at, last_accessed, expires_at
 		FROM secrets WHERE user_id = ? ORDER BY key_name
-	`, userID)
+	`, claims.UserID)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
@@ -66,7 +71,11 @@ func (h *SecretsHandler) List(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *SecretsHandler) Create(w http.ResponseWriter, r *http.Request) {
-	userID := r.Context().Value("user_id").(int64)
+	claims, ok := middleware.GetUserFromContext(r.Context())
+	if !ok {
+		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+		return
+	}
 	
 	var req CreateSecretRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
@@ -75,7 +84,7 @@ func (h *SecretsHandler) Create(w http.ResponseWriter, r *http.Request) {
 	}
 	
 	// Get UDEK
-	udek, err := h.udekManager.GetOrCreateUDEK(userID)
+	udek, err := h.udekManager.GetOrCreateUDEK(claims.UserID)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
@@ -97,7 +106,7 @@ func (h *SecretsHandler) Create(w http.ResponseWriter, r *http.Request) {
 			version = version + 1,
 			updated_at = CURRENT_TIMESTAMP,
 			expires_at = VALUES(expires_at)
-	`, userID, req.KeyName, encrypted, req.ExpiresAt)
+	`, claims.UserID, req.KeyName, encrypted, req.ExpiresAt)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
@@ -106,7 +115,7 @@ func (h *SecretsHandler) Create(w http.ResponseWriter, r *http.Request) {
 	id, _ := result.LastInsertId()
 	
 	// Audit log
-	h.logAccess(id, userID, "write", r)
+	h.logAccess(id, claims.UserID, "write", r)
 	
 	w.WriteHeader(http.StatusCreated)
 	json.NewEncoder(w).Encode(map[string]interface{}{
@@ -116,7 +125,12 @@ func (h *SecretsHandler) Create(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *SecretsHandler) GetValue(w http.ResponseWriter, r *http.Request) {
-	userID := r.Context().Value("user_id").(int64)
+	claims, ok := middleware.GetUserFromContext(r.Context())
+	if !ok {
+		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+		return
+	}
+	
 	keyName := chi.URLParam(r, "name")
 	
 	var id int64
@@ -125,7 +139,7 @@ func (h *SecretsHandler) GetValue(w http.ResponseWriter, r *http.Request) {
 		SELECT id, encrypted_value FROM secrets 
 		WHERE user_id = ? AND key_name = ?
 		AND (expires_at IS NULL OR expires_at > NOW())
-	`, userID, keyName).Scan(&id, &encrypted)
+	`, claims.UserID, keyName).Scan(&id, &encrypted)
 	if err == sql.ErrNoRows {
 		http.Error(w, "Secret not found", http.StatusNotFound)
 		return
@@ -135,7 +149,7 @@ func (h *SecretsHandler) GetValue(w http.ResponseWriter, r *http.Request) {
 	}
 	
 	// Get UDEK
-	udek, err := h.udekManager.GetOrCreateUDEK(userID)
+	udek, err := h.udekManager.GetOrCreateUDEK(claims.UserID)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
@@ -152,25 +166,30 @@ func (h *SecretsHandler) GetValue(w http.ResponseWriter, r *http.Request) {
 	h.db.Exec("UPDATE secrets SET last_accessed = NOW() WHERE id = ?", id)
 	
 	// Audit log
-	h.logAccess(id, userID, "read", r)
+	h.logAccess(id, claims.UserID, "read", r)
 	
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(map[string]string{"value": string(value)})
 }
 
 func (h *SecretsHandler) Delete(w http.ResponseWriter, r *http.Request) {
-	userID := r.Context().Value("user_id").(int64)
+	claims, ok := middleware.GetUserFromContext(r.Context())
+	if !ok {
+		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+		return
+	}
+	
 	keyName := chi.URLParam(r, "name")
 	
 	var id int64
-	err := h.db.QueryRow("SELECT id FROM secrets WHERE user_id = ? AND key_name = ?", userID, keyName).Scan(&id)
+	err := h.db.QueryRow("SELECT id FROM secrets WHERE user_id = ? AND key_name = ?", claims.UserID, keyName).Scan(&id)
 	if err == sql.ErrNoRows {
 		http.Error(w, "Secret not found", http.StatusNotFound)
 		return
 	}
 	
 	// Audit log before delete
-	h.logAccess(id, userID, "delete", r)
+	h.logAccess(id, claims.UserID, "delete", r)
 	
 	_, err = h.db.Exec("DELETE FROM secrets WHERE id = ?", id)
 	if err != nil {
@@ -182,11 +201,16 @@ func (h *SecretsHandler) Delete(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *SecretsHandler) GetAuditLog(w http.ResponseWriter, r *http.Request) {
-	userID := r.Context().Value("user_id").(int64)
+	claims, ok := middleware.GetUserFromContext(r.Context())
+	if !ok {
+		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+		return
+	}
+	
 	keyName := chi.URLParam(r, "name")
 	
 	var secretID int64
-	err := h.db.QueryRow("SELECT id FROM secrets WHERE user_id = ? AND key_name = ?", userID, keyName).Scan(&secretID)
+	err := h.db.QueryRow("SELECT id FROM secrets WHERE user_id = ? AND key_name = ?", claims.UserID, keyName).Scan(&secretID)
 	if err != nil {
 		http.Error(w, "Secret not found", http.StatusNotFound)
 		return
