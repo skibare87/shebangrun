@@ -47,6 +47,7 @@ type ScriptContent struct {
 	VersionID       int64
 	Content         []byte
 	StoragePath     string
+	EncryptionType  string // 'none', 'server_managed', 'user_managed'
 	EncryptionKeyID *int64
 	WrappedKey      []byte // Encrypted symmetric key (encrypted with RSA public key)
 }
@@ -70,4 +71,64 @@ type UserLimits struct {
 	UserID         int64
 	MaxScripts     *int
 	MaxScriptSize  *int64
+}
+
+// Server-side encryption models
+
+type UserEncryptionKey struct {
+	ID            int64
+	UserID        int64
+	EncryptedUDEK []byte
+	KeyVersion    int
+	CreatedAt     time.Time
+	RotatedAt     *time.Time
+}
+
+type Secret struct {
+	ID             int64
+	UserID         int64
+	KeyName        string
+	EncryptedValue []byte
+	Version        int
+	CreatedAt      time.Time
+	UpdatedAt      time.Time
+	LastAccessed   *time.Time
+	ExpiresAt      *time.Time
+}
+
+type SecretAudit struct {
+	ID          int64
+	SecretID    int64
+	UserID      int64
+	Action      string // 'read', 'write', 'delete'
+	IPAddress   string
+	UserAgent   string
+	AccessedAt  time.Time
+}
+
+type ScriptAccess struct {
+	ID         int64
+	ScriptID   int64
+	AccessType string // 'link', 'user', 'group'
+	UserID     *int64
+	GroupID    *int64
+	GrantedBy  int64
+	GrantedAt  time.Time
+	ExpiresAt  *time.Time
+}
+
+type UserGroup struct {
+	ID          int64
+	OwnerID     int64
+	Name        string
+	Description string
+	CreatedAt   time.Time
+	UpdatedAt   time.Time
+}
+
+type GroupMember struct {
+	GroupID  int64
+	UserID   int64
+	AddedBy  int64
+	AddedAt  time.Time
 }
