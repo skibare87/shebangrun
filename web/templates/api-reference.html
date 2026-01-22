@@ -151,6 +151,85 @@ curl https://shebang.run/user/script@dev | sh</pre>
         </div>
     </section>
 
+    <!-- Secrets -->
+    <section class="mb-12">
+        <h2 class="text-3xl font-bold mb-4">Secrets</h2>
+        
+        <div class="space-y-4">
+            <div class="bg-white p-6 rounded-lg shadow">
+                <h3 class="text-xl font-bold mb-2">GET /api/secrets</h3>
+                <p class="text-sm text-gray-600 mb-3">List your secrets</p>
+                <pre class="bg-gray-100 p-4 rounded text-sm overflow-x-auto">curl https://shebang.run/api/secrets \
+  -H "Authorization: Bearer &lt;token&gt;"</pre>
+            </div>
+
+            <div class="bg-white p-6 rounded-lg shadow">
+                <h3 class="text-xl font-bold mb-2">POST /api/secrets</h3>
+                <p class="text-sm text-gray-600 mb-3">Create or update a secret</p>
+                <pre class="bg-gray-100 p-4 rounded text-sm overflow-x-auto">curl -X POST https://shebang.run/api/secrets \
+  -H "Authorization: Bearer &lt;token&gt;" \
+  -H "Content-Type: application/json" \
+  -d '{"key_name":"AWS_KEY","value":"AKIA..."}'</pre>
+            </div>
+
+            <div class="bg-white p-6 rounded-lg shadow">
+                <h3 class="text-xl font-bold mb-2">GET /api/secrets/{name}/value</h3>
+                <p class="text-sm text-gray-600 mb-3">Get secret value</p>
+                <pre class="bg-gray-100 p-4 rounded text-sm overflow-x-auto">curl https://shebang.run/api/secrets/AWS_KEY/value \
+  -H "Authorization: Bearer &lt;token&gt;"</pre>
+            </div>
+        </div>
+    </section>
+
+    <!-- Sharing -->
+    <section class="mb-12">
+        <h2 class="text-3xl font-bold mb-4">Sharing</h2>
+        
+        <div class="space-y-4">
+            <div class="bg-white p-6 rounded-lg shadow">
+                <h3 class="text-xl font-bold mb-2">GET /api/scripts/{id}/access</h3>
+                <p class="text-sm text-gray-600 mb-3">List script access control</p>
+                <pre class="bg-gray-100 p-4 rounded text-sm overflow-x-auto">curl https://shebang.run/api/scripts/1/access \
+  -H "Authorization: Bearer &lt;token&gt;"</pre>
+            </div>
+
+            <div class="bg-white p-6 rounded-lg shadow">
+                <h3 class="text-xl font-bold mb-2">POST /api/scripts/{id}/access</h3>
+                <p class="text-sm text-gray-600 mb-3">Add users or enable link sharing</p>
+                <pre class="bg-gray-100 p-4 rounded text-sm overflow-x-auto"># Share with users
+curl -X POST https://shebang.run/api/scripts/1/access \
+  -H "Authorization: Bearer &lt;token&gt;" \
+  -H "Content-Type: application/json" \
+  -d '{"access_type":"user","usernames":["alice","bob"]}'
+
+# Enable link sharing
+curl -X POST https://shebang.run/api/scripts/1/access \
+  -H "Authorization: Bearer &lt;token&gt;" \
+  -H "Content-Type: application/json" \
+  -d '{"access_type":"link"}'</pre>
+            </div>
+
+            <div class="bg-white p-6 rounded-lg shadow">
+                <h3 class="text-xl font-bold mb-2">GET /api/shared/scripts</h3>
+                <p class="text-sm text-gray-600 mb-3">List scripts shared with you</p>
+                <pre class="bg-gray-100 p-4 rounded text-sm overflow-x-auto">curl https://shebang.run/api/shared/scripts \
+  -H "Authorization: Bearer &lt;token&gt;"</pre>
+            </div>
+        </div>
+    </section>
+
+    <!-- Community -->
+    <section class="mb-12">
+        <h2 class="text-3xl font-bold mb-4">Community</h2>
+        
+        <div class="bg-white p-6 rounded-lg shadow">
+            <h3 class="text-xl font-bold mb-2">GET /api/community/scripts</h3>
+            <p class="text-sm text-gray-600 mb-3">Browse public scripts</p>
+            <pre class="bg-gray-100 p-4 rounded text-sm overflow-x-auto">curl https://shebang.run/api/community/scripts \
+  -H "Authorization: Bearer &lt;token&gt;"</pre>
+        </div>
+    </section>
+
     <!-- Python Examples -->
     <section class="mb-12">
         <h2 class="text-3xl font-bold mb-4">Python Library</h2>
@@ -169,7 +248,15 @@ content = run(username="user", script="private",
 client = ShebangClient()
 client.login("user", "pass")
 scripts = client.list_scripts()
-client.create_script("test", "#!/bin/bash\\necho hi", visibility="public")</pre>
+client.create_script("test", "#!/bin/bash\\necho hi", visibility="public")
+
+# Secrets
+client.create_secret("AWS_KEY", "AKIA...")
+value = client.get_secret("AWS_KEY")
+
+# Sharing
+client.add_script_access(script_id=1, usernames=["alice"])
+shared = client.list_shared_scripts()</pre>
         </div>
     </section>
 

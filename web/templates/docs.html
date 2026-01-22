@@ -114,6 +114,54 @@ shebang create-key -O mykey.pem
 # Delete key
 shebang delete-key keyname</pre>
 
+            <h3 class="text-lg font-bold mb-3 mt-6">Secrets Management</h3>
+            <pre class="bg-gray-100 p-4 rounded text-sm overflow-x-auto"># List secrets
+shebang list-secrets
+
+# Get secret value
+shebang get-secret AWS_KEY
+
+# Get in bash format
+shebang get-secret AWS_KEY -f env
+
+# Create/update secret
+shebang put-secret AWS_KEY -v "AKIA..."
+echo "value" | shebang put-secret KEY -s
+
+# Delete secret
+shebang delete-secret AWS_KEY
+
+# View audit log
+shebang audit-secret AWS_KEY</pre>
+
+            <h3 class="text-lg font-bold mb-3 mt-6">Script Sharing</h3>
+            <pre class="bg-gray-100 p-4 rounded text-sm overflow-x-auto"># List who has access
+shebang list-shares myscript
+
+# Share with users
+shebang share myscript -u alice -u bob
+
+# Enable link sharing
+shebang share myscript -l
+
+# Remove access
+shebang share myscript -u alice -r
+shebang share myscript -l -r
+
+# Hide shared scripts from list
+shebang list -i</pre>
+
+            <h3 class="text-lg font-bold mb-3 mt-6">Secret Substitution</h3>
+            <pre class="bg-gray-100 p-4 rounded text-sm overflow-x-auto"># Scripts can reference secrets
+#!/bin/bash
+ssh ${SECRET:Host}
+
+# Get with substitution
+shebang get myscript -s
+
+# Run always substitutes
+shebang run myscript</pre>
+
             <h3 class="text-lg font-bold mb-3 mt-6">Docker Usage</h3>
             <pre class="bg-gray-100 p-4 rounded text-sm overflow-x-auto"># Use CLI via Docker
 docker run -it --rm -v ~/.shebangrc:/root/.shebangrc \

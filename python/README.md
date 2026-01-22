@@ -112,11 +112,67 @@ cat script.sh | shebang put -n myscript -v public -s
 shebang put -n private-script -v priv -k my-key -f script.sh -d "My private script"
 ```
 
+#### Secrets Management
+```bash
+# List secrets
+shebang list-secrets
+
+# Get secret value
+shebang get-secret AWS_KEY
+
+# Get in different formats
+shebang get-secret AWS_KEY -f env    # AWS_KEY="value"
+shebang get-secret AWS_KEY -f json   # {"AWS_KEY": "value"}
+
+# Create/update secret
+shebang put-secret AWS_KEY -v "AKIA..."
+echo "secret-value" | shebang put-secret API_KEY -s
+
+# Delete secret
+shebang delete-secret AWS_KEY
+
+# View audit log
+shebang audit-secret AWS_KEY
+```
+
+#### Script Sharing
+```bash
+# List who has access
+shebang list-shares myscript
+
+# Share with specific users
+shebang share myscript -u alice -u bob
+
+# Enable "anyone with link" sharing
+shebang share myscript -l
+
+# Remove user access
+shebang share myscript -u alice -r
+
+# Remove link sharing
+shebang share myscript -l -r
+
+# List scripts (includes shared by default)
+shebang list
+
+# Hide shared scripts
+shebang list -i
+```
+
+#### Secret Substitution
+```bash
+# Get script with secrets substituted
+shebang get myscript -s
+
+# Run script (secrets always substituted)
+shebang run myscript
+```
+
 ### CLI Options
 
 **Visibility:**
 - `priv` - Private (encrypted, requires key)
-- `unlist` - Unlisted (accessible via URL only)
+- `unlist` - Unlisted (accessible via URL only, supports ACL sharing)
 - `public` - Public (listed in community)
 
 **Configuration:**
@@ -222,6 +278,20 @@ print(f"Share URL: https://shebang.run/myuser/myscript?token={token}")
 
 # Get script metadata
 meta = client.get_metadata(username="mpruitt", script="bashtest")
+
+# Secrets management
+client.create_secret("AWS_KEY", "AKIA...")
+secrets = client.list_secrets()
+value = client.get_secret("AWS_KEY")
+audit = client.get_secret_audit("AWS_KEY")
+client.delete_secret("AWS_KEY")
+
+# Script sharing
+client.add_script_access(script_id=1, usernames=["alice", "bob"])
+access_list = client.list_script_access(script_id=1)
+client.remove_script_access(script_id=1, access_id=5)
+shared = client.list_shared_scripts()
+
 print(f"Version: {meta['version']}, Size: {meta['size']} bytes")
 
 # Verify signature

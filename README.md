@@ -1,14 +1,17 @@
 # shebang.run
 
-A platform for hosting and sharing shell scripts and code snippets with built-in versioning, encryption, and signing.
+A platform for hosting and sharing shell scripts and code snippets with built-in versioning, encryption, signing, and secrets management.
 
 ## Features
 
 - **Script Versioning**: Auto-incrementing versions with immutable history
-- **Access Control**: Private, unlisted, and public scripts with token-based sharing
+- **Access Control**: Private, unlisted, and public scripts with ACL-based sharing
 - **Encryption & Signing**: ChaCha20-Poly1305 encryption and RSA-PSS signatures
+- **Secrets Management**: Encrypted key-value store with audit logging
+- **Script Sharing**: Share unlisted scripts with specific users or "anyone with link"
+- **Secret Injection**: Reference secrets in scripts with ${SECRET:name} syntax
 - **Multiple Storage Backends**: S3-compatible or local filesystem
-- **OAuth Integration**: GitHub and Google authentication
+- **OAuth Integration**: GitHub and Google authentication with username selection
 - **Rate Limiting**: Configurable per-user limits
 - **Docker Deployment**: Complete stack with MariaDB and MinIO
 
@@ -118,6 +121,9 @@ Environment variables:
 - `GITHUB_CLIENT_SECRET`: GitHub OAuth client secret
 - `GOOGLE_CLIENT_ID`: Google OAuth client ID
 - `GOOGLE_CLIENT_SECRET`: Google OAuth client secret
+- `MASTER_ENCRYPTION_KEY`: Base64-encoded 32-byte key for server-side encryption
+- `MASTER_KEY_SOURCE`: Key source (`env`, `aws_kms`, `aws_secrets`)
+- `SECRETS_BACKEND`: Secrets storage backend (`database`, `redis`, `dynamodb`)
 
 ## Architecture
 
