@@ -117,10 +117,6 @@
                         <div>shebang get <span x-text="currentScript?.name"></span> -u <span x-text="currentScript?.owner"></span></div>
                         <div>shebang run <span x-text="currentScript?.name"></span> -u <span x-text="currentScript?.owner"></span></div>
                     </div>
-                    <div class="mt-2">
-                        <div class="text-gray-500 mb-1"># Or with curl</div>
-                        <div x-text="'curl ' + window.location.origin + '/' + (currentScript?.owner || getUser().username) + '/' + currentScript?.name + ' | sh'"></div>
-                    </div>
                 </div>
             </div>
             <div>
