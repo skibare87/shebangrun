@@ -22,6 +22,13 @@ type Config struct {
 	GitHubClientSecret string
 	GoogleClientID   string
 	GoogleClientSecret string
+	
+	// Encryption
+	MasterKeySource string
+	MasterKeyEnv    string
+	
+	// Secrets store
+	SecretsBackend string
 }
 
 func Load() *Config {
@@ -42,6 +49,9 @@ func Load() *Config {
 		GitHubClientSecret: getEnv("GITHUB_CLIENT_SECRET", ""),
 		GoogleClientID:   getEnv("GOOGLE_CLIENT_ID", ""),
 		GoogleClientSecret: getEnv("GOOGLE_CLIENT_SECRET", ""),
+		MasterKeySource:  getEnv("MASTER_KEY_SOURCE", "env"),
+		MasterKeyEnv:     getEnv("MASTER_KEY_ENV", "MASTER_ENCRYPTION_KEY"),
+		SecretsBackend:   getEnv("SECRETS_BACKEND", "database"),
 	}
 }
 
