@@ -102,7 +102,7 @@ func main() {
 	r.Use(chimiddleware.Logger)
 	r.Use(chimiddleware.Recoverer)
 	r.Use(chimiddleware.RealIP)
-	r.Use(middleware.RateLimitMiddleware(cfg.DefaultRateLimit))
+	r.Use(middleware.RateLimitMiddleware(cfg.DefaultRateLimit, db))
 	r.Use(cors.Handler(cors.Options{
 		AllowedOrigins:   []string{"*"},
 		AllowedMethods:   []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},

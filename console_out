@@ -1,6 +1,16 @@
-content_script.js:1 content script loaded 4c854b85-28b9-49de-9ff5-c95f682f680b
+content_script.js:1 content script loaded 719f41f9-66e3-4156-8cba-683d1afa0102
 credentials.js:1 Injecting credentials patch
 (index):64 cdn.tailwindcss.com should not be used in production. To use Tailwind CSS in production, install it as a PostCSS plugin or use the Tailwind CLI: https://tailwindcss.com/docs/installation
+(anonymous) @ (index):64
+content_script.js:1 Injecting javascript to wrap FileSystemFileHandle.getFile()
+upload_element_creation.js:1 Injecting element creation patch
+upload_element_creation.js:1 First element creation parent found
+upload_fileaccessapi.js:1 Injecting file system access api patch
+Navigated to https://dev.shebang.run/admin
+content_script.js:1 content script loaded 08867018-91d0-4ef2-a0b8-47e496abcc22
+credentials.js:1 Injecting credentials patch
+(index):64 cdn.tailwindcss.com should not be used in production. To use Tailwind CSS in production, install it as a PostCSS plugin or use the Tailwind CLI: https://tailwindcss.com/docs/installation
+(anonymous) @ (index):64
 (anonymous) @ (index):64
 cdn.min.js:1 Alpine Expression Error: Cannot read properties of null (reading 'tier_id')
 
@@ -8,67 +18,161 @@ Expression: "currentUser.tier_id"
 
  <select x-model=​"currentUser.tier_id" class=​"w-full px-3 py-2 border rounded focus:​ring-2 focus:​ring-indigo-500">​…​</select>​
 ee @ cdn.min.js:1
+(anonymous) @ cdn.min.js:5
+Promise.catch
+(anonymous) @ cdn.min.js:5
+fr @ cdn.min.js:1
+c @ cdn.min.js:5
+(anonymous) @ cdn.min.js:5
+r @ cdn.min.js:5
+Zr @ cdn.min.js:5
+k @ cdn.min.js:1
+(anonymous) @ cdn.min.js:1
+(anonymous) @ cdn.min.js:5
+r @ cdn.min.js:5
+n @ cdn.min.js:5
+ir @ cdn.min.js:5
+S @ cdn.min.js:1
+(anonymous) @ cdn.min.js:1
+Jt @ cdn.min.js:1
+(anonymous) @ cdn.min.js:5
 cdn.min.js:1 Alpine Expression Error: Cannot read properties of null (reading 'is_admin')
 
 Expression: "currentUser.is_admin"
 
  <select x-model=​"currentUser.is_admin" class=​"w-full px-3 py-2 border rounded focus:​ring-2 focus:​ring-indigo-500">​…​</select>​
 ee @ cdn.min.js:1
+(anonymous) @ cdn.min.js:5
+Promise.catch
+(anonymous) @ cdn.min.js:5
+fr @ cdn.min.js:1
+c @ cdn.min.js:5
+(anonymous) @ cdn.min.js:5
+r @ cdn.min.js:5
+Zr @ cdn.min.js:5
+k @ cdn.min.js:1
+(anonymous) @ cdn.min.js:1
+(anonymous) @ cdn.min.js:5
+r @ cdn.min.js:5
+n @ cdn.min.js:5
+ir @ cdn.min.js:5
+S @ cdn.min.js:1
+(anonymous) @ cdn.min.js:1
+Jt @ cdn.min.js:1
+(anonymous) @ cdn.min.js:5
 cdn.min.js:1 Alpine Expression Error: Cannot read properties of null (reading 'rate_limit')
 
 Expression: "currentUser.rate_limit"
 
  <input type=​"number" x-model=​"currentUser.rate_limit" class=​"w-full px-3 py-2 border rounded focus:​ring-2 focus:​ring-indigo-500">​
 ee @ cdn.min.js:1
+(anonymous) @ cdn.min.js:5
+Promise.catch
+(anonymous) @ cdn.min.js:5
+fr @ cdn.min.js:1
+c @ cdn.min.js:5
+(anonymous) @ cdn.min.js:5
+r @ cdn.min.js:5
+Zr @ cdn.min.js:5
+k @ cdn.min.js:1
+(anonymous) @ cdn.min.js:1
+(anonymous) @ cdn.min.js:5
+r @ cdn.min.js:5
+n @ cdn.min.js:5
+ir @ cdn.min.js:5
+S @ cdn.min.js:1
+(anonymous) @ cdn.min.js:1
+Jt @ cdn.min.js:1
+(anonymous) @ cdn.min.js:5
 cdn.min.js:5 Uncaught TypeError: Cannot read properties of null (reading 'tier_id')
+[Alpine] currentUser.tier_id @ VM110:3
+(anonymous) @ cdn.min.js:5
+fr @ cdn.min.js:1
+c @ cdn.min.js:5
+(anonymous) @ cdn.min.js:5
+r @ cdn.min.js:5
+Zr @ cdn.min.js:5
+k @ cdn.min.js:1
+(anonymous) @ cdn.min.js:1
+(anonymous) @ cdn.min.js:5
+r @ cdn.min.js:5
+n @ cdn.min.js:5
+ir @ cdn.min.js:5
+S @ cdn.min.js:1
+(anonymous) @ cdn.min.js:1
+Jt @ cdn.min.js:1
+(anonymous) @ cdn.min.js:5
 cdn.min.js:5 Uncaught TypeError: Cannot read properties of null (reading 'is_admin')
+[Alpine] currentUser.is_admin @ VM115:3
+(anonymous) @ cdn.min.js:5
+fr @ cdn.min.js:1
+c @ cdn.min.js:5
+(anonymous) @ cdn.min.js:5
+r @ cdn.min.js:5
+Zr @ cdn.min.js:5
+k @ cdn.min.js:1
+(anonymous) @ cdn.min.js:1
+(anonymous) @ cdn.min.js:5
+r @ cdn.min.js:5
+n @ cdn.min.js:5
+ir @ cdn.min.js:5
+S @ cdn.min.js:1
+(anonymous) @ cdn.min.js:1
+Jt @ cdn.min.js:1
+(anonymous) @ cdn.min.js:5
 cdn.min.js:5 Uncaught TypeError: Cannot read properties of null (reading 'rate_limit')
+[Alpine] currentUser.rate_limit @ VM119:3
+(anonymous) @ cdn.min.js:5
+fr @ cdn.min.js:1
+c @ cdn.min.js:5
+(anonymous) @ cdn.min.js:5
+r @ cdn.min.js:5
+Zr @ cdn.min.js:5
+k @ cdn.min.js:1
+(anonymous) @ cdn.min.js:1
+(anonymous) @ cdn.min.js:5
+r @ cdn.min.js:5
+n @ cdn.min.js:5
+ir @ cdn.min.js:5
+S @ cdn.min.js:1
+(anonymous) @ cdn.min.js:1
+Jt @ cdn.min.js:1
+(anonymous) @ cdn.min.js:5
 content_script.js:1 Injecting javascript to wrap FileSystemFileHandle.getFile()
+admin:308 Raw tiers data: (3) [{…}, {…}, {…}]
+admin:310 Tiers assigned: Proxy(Array) {0: {…}, 1: {…}, 2: {…}}
+admin:311 Tiers length: 3
+admin:313 First tier: Proxy(Object) {id: 1, name: 'free', display_name: 'Free', price_monthly: 0, price_yearly: 0, …}
+admin:308 Raw tiers data: (3) [{…}, {…}, {…}]
+admin:310 Tiers assigned: Proxy(Array) {0: {…}, 1: {…}, 2: {…}}
+admin:311 Tiers length: 3
+admin:313 First tier: Proxy(Object) {id: 1, name: 'free', display_name: 'Free', price_monthly: 0, price_yearly: 0, …}
+Fetch finished loading: GET "<URL>".
+Fetch finished loading: GET "<URL>".
+Fetch finished loading: GET "<URL>".
+Fetch finished loading: GET "<URL>".
+Fetch finished loading: GET "<URL>".
 upload_fileaccessapi.js:1 Injecting file system access api patch
 upload_element_creation.js:1 Injecting element creation patch
 upload_element_creation.js:1 First element creation parent found
-admin:308 Raw tiers data: Array(3)0: CreatedAt: "2026-01-23T16:36:32Z"DisplayName: "Free"Features: {ai_generation: false, api_access: true, private: false, public: true, unlisted: false}ID: 1MaxAIGenerations: 0MaxScripts: 25MaxSecrets: 5MaxStorageBytes: 10485760Name: "free"PriceMonthly: 0PriceYearly: 0RateLimit: 50UpdatedAt: "2026-01-23T16:36:32Z"[[Prototype]]: Object1: CreatedAt: "2026-01-23T16:36:32Z"DisplayName: "Pro"Features: {ai_generation: false, api_access: true, priority_support: true, private: false, public: true, …}ID: 2MaxAIGenerations: 5MaxScripts: 100MaxSecrets: 50MaxStorageBytes: 524288000Name: "pro"PriceMonthly: 10PriceYearly: 0RateLimit: 200UpdatedAt: "2026-01-23T16:36:32Z"[[Prototype]]: Object2: CreatedAt: "2026-01-23T16:36:32Z"DisplayName: "Ultimate"Features: {advanced_analytics: true, ai_generation: true, api_access: true, priority_support: true, private: true, …}ID: 3MaxAIGenerations: 500MaxScripts: 500MaxSecrets: 500MaxStorageBytes: 1073741824Name: "ultimate"PriceMonthly: 20PriceYearly: 0RateLimit: 1000UpdatedAt: "2026-01-23T16:36:32Z"[[Prototype]]: Objectlength: 3[[Prototype]]: Array(0)at: ƒ at()concat: ƒ concat()constructor: ƒ Array()copyWithin: ƒ copyWithin()entries: ƒ entries()every: ƒ every()fill: ƒ fill()filter: ƒ filter()find: ƒ find()findIndex: ƒ findIndex()findLast: ƒ findLast()findLastIndex: ƒ findLastIndex()flat: ƒ flat()flatMap: ƒ flatMap()forEach: ƒ forEach()includes: ƒ includes()indexOf: ƒ indexOf()join: ƒ join()keys: ƒ keys()lastIndexOf: ƒ lastIndexOf()length: 0map: ƒ map()pop: ƒ pop()push: ƒ push()reduce: ƒ reduce()reduceRight: ƒ reduceRight()reverse: ƒ reverse()shift: ƒ shift()slice: ƒ slice()some: ƒ some()sort: ƒ sort()splice: ƒ splice()toLocaleString: ƒ toLocaleString()toReversed: ƒ toReversed()toSorted: ƒ toSorted()toSpliced: ƒ toSpliced()toString: ƒ toString()unshift: ƒ unshift()values: ƒ values()with: ƒ with()Symbol(Symbol.iterator): ƒ values()Symbol(Symbol.unscopables): {at: true, copyWithin: true, entries: true, fill: true, find: true, …}[[Prototype]]: Object
-admin:310 Tiers assigned: Proxy(Array)[[Handler]]: Object[[Target]]: Array(3)[[IsRevoked]]: false
-admin:311 Tiers length: 3
-admin:313 First tier: Proxy(Object)[[Handler]]: Object[[Target]]: Object[[IsRevoked]]: false
-cdn.min.js:1 Alpine Warning: x-for ":key" is undefined or invalid <template x-for=​"tier in (tiers || []​)​" :key=​"tier.id">​…​</template>​slot
-v @ cdn.min.js:1
-cdn.min.js:1 Alpine Expression Error: Cannot read properties of undefined (reading 'after')
-
-Expression: "(tiers || [])"
-
- <template x-for=​"tier in (tiers || []​)​" :key=​"tier.id">​…​</template>​slot
-ee @ cdn.min.js:1
-cdn.min.js:1 Alpine Warning: x-for ":key" is undefined or invalid <template x-for=​"tier in (tiers || []​)​" :key=​"tier.id">​…​</template>​slot
-v @ cdn.min.js:1
-cdn.min.js:1 Alpine Expression Error: Cannot read properties of undefined (reading 'after')
-
-Expression: "(tiers || [])"
-
- <template x-for=​"tier in (tiers || []​)​" :key=​"tier.id">​…​</template>​slot
-ee @ cdn.min.js:1
-cdn.min.js:5 Uncaught TypeError: Cannot read properties of undefined (reading 'after')
-cdn.min.js:5 Uncaught TypeError: Cannot read properties of undefined (reading 'after')
-admin:308 Raw tiers data: Array(3)0: {ID: 1, Name: 'free', DisplayName: 'Free', PriceMonthly: 0, PriceYearly: 0, …}1: {ID: 2, Name: 'pro', DisplayName: 'Pro', PriceMonthly: 10, PriceYearly: 0, …}2: {ID: 3, Name: 'ultimate', DisplayName: 'Ultimate', PriceMonthly: 20, PriceYearly: 0, …}length: 3[[Prototype]]: Array(0)
-admin:310 Tiers assigned: Proxy(Array)[[Handler]]: Object[[Target]]: Array(3)[[IsRevoked]]: false
-admin:311 Tiers length: 3
-admin:313 First tier: Proxy(Object)[[Handler]]: Object[[Target]]: Object[[IsRevoked]]: false
-cdn.min.js:1 Alpine Warning: x-for ":key" is undefined or invalid <template x-for=​"tier in (tiers || []​)​" :key=​"tier.id">​…​</template>​slot
-v @ cdn.min.js:1
-cdn.min.js:1 Alpine Expression Error: Cannot read properties of undefined (reading 'after')
-
-Expression: "(tiers || [])"
-
- <template x-for=​"tier in (tiers || []​)​" :key=​"tier.id">​…​</template>​slot
-ee @ cdn.min.js:1
-cdn.min.js:1 Alpine Warning: x-for ":key" is undefined or invalid <template x-for=​"tier in (tiers || []​)​" :key=​"tier.id">​…​</template>​slot
-v @ cdn.min.js:1
-cdn.min.js:1 Alpine Expression Error: Cannot read properties of undefined (reading 'after')
-
-Expression: "(tiers || [])"
-
- <template x-for=​"tier in (tiers || []​)​" :key=​"tier.id">​…​</template>​slot
-ee @ cdn.min.js:1
-cdn.min.js:5 Uncaught TypeError: Cannot read properties of undefined (reading 'after')
-cdn.min.js:5 Uncaught TypeError: Cannot read properties of undefined (reading 'after')
+admin:322 Viewing user: Proxy(Object) {id: 2, username: 'Tester', email: 'matt@pruitt.life', is_admin: false, tier_id: 0, …}
+admin:324 Current user set to: Proxy(Object) {id: 2, username: 'Tester', email: 'matt@pruitt.life', is_admin: false, tier_id: 0, …}
+admin:342  PUT https://dev.shebang.run/api/admin/users/2/limits 500 (Internal Server Error)
+saveUserLimits @ admin:342
+Pe @ cdn.min.js:5
+(anonymous) @ cdn.min.js:5
+fr @ cdn.min.js:1
+(anonymous) @ cdn.min.js:5
+o @ cdn.min.js:5
+(anonymous) @ cdn.min.js:5
+(anonymous) @ cdn.min.js:5
+admin:342 Fetch failed loading: PUT "https://dev.shebang.run/api/admin/users/2/limits".
+saveUserLimits @ admin:342
+Pe @ cdn.min.js:5
+(anonymous) @ cdn.min.js:5
+fr @ cdn.min.js:1
+(anonymous) @ cdn.min.js:5
+o @ cdn.min.js:5
+(anonymous) @ cdn.min.js:5
+(anonymous) @ cdn.min.js:5
 

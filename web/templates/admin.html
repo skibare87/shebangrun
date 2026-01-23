@@ -246,7 +246,9 @@ function adminPanel() {
         },
         
         viewUser(user) {
+            console.log('Viewing user:', user);
             this.currentUser = {...user};
+            console.log('Current user set to:', this.currentUser);
             this.userLimits = {
                 max_scripts: null,
                 max_script_size: null

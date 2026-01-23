@@ -4,19 +4,19 @@ import (
 	"net/http"
 	"sync"
 	"time"
+	
+	"shebang.run/internal/database"
 )
 
 type rateLimiter struct {
 	requests map[string][]time.Time
 	mu       sync.RWMutex
-	limit    int
 	window   time.Duration
 }
 
-func newRateLimiter(limit int, window time.Duration) *rateLimiter {
+func newRateLimiter(window time.Duration) *rateLimiter {
 	rl := &rateLimiter{
 		requests: make(map[string][]time.Time),
-		limit:    limit,
 		window:   window,
 	}
 	
@@ -49,7 +49,7 @@ func (rl *rateLimiter) cleanup() {
 	}
 }
 
-func (rl *rateLimiter) allow(key string) bool {
+func (rl *rateLimiter) allow(key string, limit int) bool {
 	rl.mu.Lock()
 	defer rl.mu.Unlock()
 	
@@ -63,7 +63,7 @@ func (rl *rateLimiter) allow(key string) bool {
 		}
 	}
 	
-	if len(valid) >= rl.limit {
+	if len(valid) >= limit {
 		return false
 	}
 	
@@ -75,9 +75,9 @@ func (rl *rateLimiter) allow(key string) bool {
 
 var globalRateLimiter *rateLimiter
 
-func RateLimitMiddleware(limit int) func(http.Handler) http.Handler {
+func RateLimitMiddleware(defaultLimit int, db *database.DB) func(http.Handler) http.Handler {
 	if globalRateLimiter == nil {
-		globalRateLimiter = newRateLimiter(limit, time.Minute)
+		globalRateLimiter = newRateLimiter(time.Minute)
 	}
 	
 	return func(next http.Handler) http.Handler {
@@ -88,9 +88,17 @@ func RateLimitMiddleware(limit int) func(http.Handler) http.Handler {
 				return
 			}
 			
+			// Get user's tier limit
+			limit := defaultLimit
+			if claims, ok := GetUserFromContext(r.Context()); ok {
+				if tier, err := db.GetUserTier(claims.UserID); err == nil {
+					limit = tier.RateLimit
+				}
+			}
+			
 			ip := r.RemoteAddr
 			
-			if !globalRateLimiter.allow(ip) {
+			if !globalRateLimiter.allow(ip, limit) {
 				http.Error(w, "Rate limit exceeded", http.StatusTooManyRequests)
 				return
 			}
