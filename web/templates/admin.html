@@ -215,16 +215,6 @@ function adminPanel() {
             this.loadUsers();
             this.loadTiers();
         },
-            }
-            this.loadUsers();
-        },
-        
-        get filteredUsers() {
-            if (!this.searchQuery) return this.users;
-            const query = this.searchQuery.toLowerCase();
-            return this.users.filter(u => 
-                u.username.toLowerCase().includes(query) || 
-                u.email.toLowerCase().includes(query)
             );
         },
         
