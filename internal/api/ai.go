@@ -33,7 +33,7 @@ func (h *AIHandler) Generate(w http.ResponseWriter, r *http.Request) {
 	// Check if user can use AI (admins bypass)
 	if !claims.IsAdmin {
 		tier, ok := middleware.GetTierFromContext(r.Context())
-		if !ok || !tier.AllowAIGeneration {
+		if !ok || !tier.Features["ai_generation"] {
 			http.Error(w, "AI generation not available in your tier. Upgrade to Ultimate.", http.StatusForbidden)
 			return
 		}

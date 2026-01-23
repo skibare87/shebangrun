@@ -2,9 +2,9 @@ package ai
 
 import (
 	"context"
-	"encoding/json"
 	"errors"
 	"fmt"
+	"os"
 	"strings"
 )
 
@@ -79,4 +79,11 @@ func ValidateScript(script string) error {
 func CountTokens(text string) int {
 	// Rough estimate: 1 token ≈ 4 characters
 	return len(text) / 4
+}
+
+func getEnv(key, defaultVal string) string {
+	if val := os.Getenv(key); val != "" {
+		return val
+	}
+	return defaultVal
 }

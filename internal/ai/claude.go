@@ -89,10 +89,3 @@ func (p *ClaudeProvider) GenerateScript(ctx context.Context, prompt string, args
 	tokens := result.Usage.InputTokens + result.Usage.OutputTokens
 	return script, tokens, nil
 }
-
-func getEnv(key, defaultVal string) string {
-	if val := os.Getenv(key); val != "" {
-		return val
-	}
-	return defaultVal
-}
