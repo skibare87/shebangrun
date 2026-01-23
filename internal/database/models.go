@@ -11,7 +11,7 @@ type User struct {
 	OAuthID      string
 	IsAdmin      bool
 	TierID       int64
-	RateLimit    int
+	RateLimit    *int
 	CreatedAt    time.Time
 }
 

@@ -30,7 +30,7 @@ type UserListResponse struct {
 	IsAdmin   bool   `json:"is_admin"`
 	TierID    int64  `json:"tier_id"`
 	TierName  string `json:"tier_name"`
-	RateLimit int    `json:"rate_limit"`
+	RateLimit *int   `json:"rate_limit"`
 	CreatedAt string `json:"created_at"`
 }
 
@@ -69,6 +69,7 @@ func (h *AdminHandler) ListUsers(w http.ResponseWriter, r *http.Request) {
 
 	users, err := h.db.ListUsers(limit, offset)
 	if err != nil {
+		log.Printf("Failed to list users: %v", err)
 		http.Error(w, "Failed to fetch users", http.StatusInternalServerError)
 		return
 	}
@@ -79,6 +80,7 @@ func (h *AdminHandler) ListUsers(w http.ResponseWriter, r *http.Request) {
 		var tierName string
 		err := h.db.DB.QueryRow("SELECT display_name FROM tiers WHERE id = ?", u.TierID).Scan(&tierName)
 		if err != nil {
+			log.Printf("Failed to get tier name for user %d: %v", u.ID, err)
 			tierName = "Unknown"
 		}
 		
