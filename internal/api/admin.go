@@ -75,11 +75,11 @@ func (h *AdminHandler) ListUsers(w http.ResponseWriter, r *http.Request) {
 
 	var response []UserListResponse
 	for _, u := range users {
-		// Get tier name
-		tier, _ := h.db.GetUserTier(u.ID)
-		tierName := "Unknown"
-		if tier != nil {
-			tierName = tier.DisplayName
+		// Get tier name via JOIN (already in query would be better, but this works)
+		var tierName string
+		err := h.db.DB.QueryRow("SELECT display_name FROM tiers WHERE id = ?", u.TierID).Scan(&tierName)
+		if err != nil {
+			tierName = "Unknown"
 		}
 		
 		response = append(response, UserListResponse{
