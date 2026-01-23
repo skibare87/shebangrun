@@ -46,32 +46,36 @@ func (db *DB) RevokeShareToken(token string, userID int64) error {
 }
 
 func (db *DB) GetUserLimits(userID int64, defaultMaxScripts int, defaultMaxScriptSize int64) (int, int64, error) {
-	var maxScripts sql.NullInt32
-	var maxScriptSize sql.NullInt64
+	// Get tier limits first
+	tier, err := db.GetUserTier(userID)
+	maxScripts := defaultMaxScripts
+	maxScriptSize := defaultMaxScriptSize
 	
-	err := db.QueryRow(
+	if err == nil {
+		maxScripts = tier.MaxScripts
+		maxScriptSize = tier.MaxStorageBytes
+	}
+	
+	// Check for user-specific overrides
+	var overrideScripts sql.NullInt32
+	var overrideSize sql.NullInt64
+	
+	err = db.QueryRow(
 		"SELECT max_scripts, max_script_size FROM user_limits WHERE user_id = ?",
 		userID,
-	).Scan(&maxScripts, &maxScriptSize)
+	).Scan(&overrideScripts, &overrideSize)
 	
-	if err == sql.ErrNoRows {
-		return defaultMaxScripts, defaultMaxScriptSize, nil
-	}
-	if err != nil {
-		return 0, 0, err
-	}
-	
-	scripts := defaultMaxScripts
-	if maxScripts.Valid {
-		scripts = int(maxScripts.Int32)
+	// Apply overrides if set
+	if err == nil {
+		if overrideScripts.Valid {
+			maxScripts = int(overrideScripts.Int32)
+		}
+		if overrideSize.Valid {
+			maxScriptSize = overrideSize.Int64
+		}
 	}
 	
-	size := defaultMaxScriptSize
-	if maxScriptSize.Valid {
-		size = maxScriptSize.Int64
-	}
-	
-	return scripts, size, nil
+	return maxScripts, maxScriptSize, nil
 }
 
 func (db *DB) SetUserLimits(userID int64, maxScripts *int, maxScriptSize *int64) error {

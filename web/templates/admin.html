@@ -113,20 +113,22 @@
                     </select>
                 </div>
                 <div x-show="currentUser">
-                    <label class="text-sm font-medium text-gray-700">Rate Limit</label>
+                    <label class="text-sm font-medium text-gray-700">Rate Limit (Override)</label>
                     <input type="number" x-model="currentUser.rate_limit" 
                            class="w-full px-3 py-2 border rounded focus:ring-2 focus:ring-indigo-500">
-                    <p class="text-xs text-gray-500 mt-1">Requests per minute</p>
+                    <p class="text-xs text-gray-500 mt-1">Leave empty to use tier default. Overrides tier limit if set.</p>
                 </div>
                 <div x-show="currentUser">
-                    <label class="text-sm font-medium text-gray-700">Max Scripts</label>
+                    <label class="text-sm font-medium text-gray-700">Max Scripts (Override)</label>
                     <input type="number" x-model="userLimits.max_scripts" 
                            class="w-full px-3 py-2 border rounded focus:ring-2 focus:ring-indigo-500">
+                    <p class="text-xs text-gray-500 mt-1">Leave empty to use tier default</p>
                 </div>
                 <div x-show="currentUser">
-                    <label class="text-sm font-medium text-gray-700">Max Script Size (bytes)</label>
+                    <label class="text-sm font-medium text-gray-700">Max Script Size (Override)</label>
                     <input type="number" x-model="userLimits.max_script_size" 
                            class="w-full px-3 py-2 border rounded focus:ring-2 focus:ring-indigo-500">
+                    <p class="text-xs text-gray-500 mt-1">Leave empty to use tier default</p>
                 </div>
                 <div>
                     <label class="text-sm font-medium text-gray-700">Member Since</label>
