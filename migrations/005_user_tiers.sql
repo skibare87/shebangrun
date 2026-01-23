@@ -18,9 +18,9 @@ CREATE TABLE tiers (
 
 -- Seed default tiers
 INSERT INTO tiers (name, display_name, price_monthly, max_storage_bytes, max_secrets, max_scripts, max_ai_generations, rate_limit, features) VALUES
-('free', 'Free', 0.00, 10485760, 5, 25, 0, 50, 
+('free', 'Free', 0.00, 10485760, 5, 25, 0, 120, 
  '{"public": true, "unlisted": false, "private": false, "ai_generation": false, "api_access": true}'),
-('pro', 'Pro', 10.00, 524288000, 50, 100, 5, 200, 
+('pro', 'Pro', 10.00, 524288000, 50, 100, 5, 300, 
  '{"public": true, "unlisted": true, "private": false, "ai_generation": false, "api_access": true, "priority_support": true}'),
 ('ultimate', 'Ultimate', 20.00, 1073741824, 500, 500, 500, 1000, 
  '{"public": true, "unlisted": true, "private": true, "ai_generation": true, "api_access": true, "priority_support": true, "advanced_analytics": true}');
