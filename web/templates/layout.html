@@ -28,49 +28,43 @@
                     </div>
                 </div>
                 <div class="flex items-center space-x-4" x-data="{ loggedIn: !!localStorage.getItem('token'), isAdmin: JSON.parse(localStorage.getItem('user') || '{}').is_admin, mobileMenuOpen: false }">
-                    <template x-if="loggedIn">
-                        <!-- Mobile menu button -->
-                        <button @click="mobileMenuOpen = !mobileMenuOpen" class="md:hidden text-gray-700">
-                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path x-show="!mobileMenuOpen" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
-                                <path x-show="mobileMenuOpen" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
-                            </svg>
-                        </button>
-                        
-                        <!-- Desktop menu -->
-                        <div class="hidden md:flex items-center space-x-4">
-                            <a href="/dashboard" class="text-gray-700 hover:text-gray-900">Scripts</a>
-                            <a href="/community" class="text-gray-700 hover:text-gray-900">Community</a>
-                            <a href="/keys" class="text-gray-700 hover:text-gray-900">Keys</a>
-                            <a href="/secrets" class="text-gray-700 hover:text-gray-900">Secrets</a>
-                            <a href="/account" class="text-gray-700 hover:text-gray-900">Account</a>
-                            <template x-if="isAdmin">
-                                <a href="/admin" class="text-purple-700 hover:text-purple-900 font-medium">Admin</a>
-                            </template>
-                            <button @click="localStorage.removeItem('token'); localStorage.removeItem('user'); window.location.href='/'" class="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600">Logout</button>
-                        </div>
-                        
-                        <!-- Mobile menu -->
-                        <div x-show="mobileMenuOpen" @click.away="mobileMenuOpen = false" 
-                             class="md:hidden absolute top-16 right-0 bg-white shadow-lg rounded-lg p-4 space-y-2 z-50">
-                            <a href="/dashboard" class="block text-gray-700 hover:text-gray-900 py-2">Scripts</a>
-                            <a href="/community" class="block text-gray-700 hover:text-gray-900 py-2">Community</a>
-                            <a href="/keys" class="block text-gray-700 hover:text-gray-900 py-2">Keys</a>
-                            <a href="/secrets" class="block text-gray-700 hover:text-gray-900 py-2">Secrets</a>
-                            <a href="/account" class="block text-gray-700 hover:text-gray-900 py-2">Account</a>
-                            <template x-if="isAdmin">
-                                <a href="/admin" class="block text-purple-700 hover:text-purple-900 font-medium py-2">Admin</a>
-                            </template>
-                            <button @click="localStorage.removeItem('token'); localStorage.removeItem('user'); window.location.href='/'" 
-                                    class="w-full bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600">Logout</button>
-                        </div>
-                    </template>
-                    <template x-if="!loggedIn">
-                        <div class="flex items-center space-x-4">
-                            <a href="/login" class="text-gray-700 hover:text-gray-900">Login</a>
-                            <a href="/register" class="bg-indigo-600 text-white px-4 py-2 rounded hover:bg-indigo-700">Sign Up</a>
-                        </div>
-                    </template>
+                    <!-- Mobile menu button (logged in) -->
+                    <button x-show="loggedIn" @click="mobileMenuOpen = !mobileMenuOpen" class="md:hidden text-gray-700">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path x-show="!mobileMenuOpen" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
+                            <path x-show="mobileMenuOpen" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                        </svg>
+                    </button>
+                    
+                    <!-- Desktop menu (logged in) -->
+                    <div x-show="loggedIn" class="hidden md:flex items-center space-x-4">
+                        <a href="/dashboard" class="text-gray-700 hover:text-gray-900">Scripts</a>
+                        <a href="/community" class="text-gray-700 hover:text-gray-900">Community</a>
+                        <a href="/keys" class="text-gray-700 hover:text-gray-900">Keys</a>
+                        <a href="/secrets" class="text-gray-700 hover:text-gray-900">Secrets</a>
+                        <a href="/account" class="text-gray-700 hover:text-gray-900">Account</a>
+                        <a x-show="isAdmin" href="/admin" class="text-purple-700 hover:text-purple-900 font-medium">Admin</a>
+                        <button @click="localStorage.removeItem('token'); localStorage.removeItem('user'); window.location.href='/'" class="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600">Logout</button>
+                    </div>
+                    
+                    <!-- Mobile menu (logged in) -->
+                    <div x-show="loggedIn && mobileMenuOpen" @click.away="mobileMenuOpen = false" 
+                         class="md:hidden absolute top-16 right-0 bg-white shadow-lg rounded-lg p-4 space-y-2 z-50">
+                        <a href="/dashboard" class="block text-gray-700 hover:text-gray-900 py-2">Scripts</a>
+                        <a href="/community" class="block text-gray-700 hover:text-gray-900 py-2">Community</a>
+                        <a href="/keys" class="block text-gray-700 hover:text-gray-900 py-2">Keys</a>
+                        <a href="/secrets" class="block text-gray-700 hover:text-gray-900 py-2">Secrets</a>
+                        <a href="/account" class="block text-gray-700 hover:text-gray-900 py-2">Account</a>
+                        <a x-show="isAdmin" href="/admin" class="block text-purple-700 hover:text-purple-900 font-medium py-2">Admin</a>
+                        <button @click="localStorage.removeItem('token'); localStorage.removeItem('user'); window.location.href='/'" 
+                                class="w-full bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600">Logout</button>
+                    </div>
+                    
+                    <!-- Not logged in -->
+                    <div x-show="!loggedIn" class="flex items-center space-x-4">
+                        <a href="/login" class="text-gray-700 hover:text-gray-900">Login</a>
+                        <a href="/register" class="bg-indigo-600 text-white px-4 py-2 rounded hover:bg-indigo-700">Sign Up</a>
+                    </div>
                 </div>
             </div>
         </div>
