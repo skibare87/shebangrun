@@ -24,7 +24,7 @@ func NewBedrockProvider() *BedrockProvider {
 	
 	return &BedrockProvider{
 		bearerToken: token,
-		modelID:     getEnv("BEDROCK_MODEL_ID", "anthropic.claude-3-5-sonnet-20241022-v2:0"),
+		modelID:     getEnv("BEDROCK_MODEL_ID", "amazon.nova-lite-v1:0"),
 		region:      getEnv("AWS_REGION", "us-east-1"),
 	}
 }
