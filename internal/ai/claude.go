@@ -18,7 +18,7 @@ type ClaudeProvider struct {
 func NewClaudeProvider() *ClaudeProvider {
 	return &ClaudeProvider{
 		apiKey: os.Getenv("CLAUDE_API_KEY"),
-		model:  getEnv("CLAUDE_MODEL", "claude-3-5-sonnet-20241022"),
+		model:  getEnv("CLAUDE_MODEL", "claude-sonnet-4-20250514"),
 	}
 }
 

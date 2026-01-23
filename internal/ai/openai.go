@@ -18,7 +18,7 @@ type OpenAIProvider struct {
 func NewOpenAIProvider() *OpenAIProvider {
 	return &OpenAIProvider{
 		apiKey: os.Getenv("OPENAI_API_KEY"),
-		model:  getEnv("OPENAI_MODEL", "gpt-4"),
+		model:  getEnv("OPENAI_MODEL", "gpt-5.2-2025-12-11"),
 	}
 }
 
