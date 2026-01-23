@@ -95,9 +95,11 @@ func RateLimitMiddleware(defaultLimit int, db *database.DB) func(http.Handler) h
 				var userRateLimit *int
 				db.DB.QueryRow("SELECT rate_limit FROM users WHERE id = ?", claims.UserID).Scan(&userRateLimit)
 				
-				if userRateLimit != nil && *userRateLimit > 0 {
+				if userRateLimit != nil {
+					// User has override set
 					limit = *userRateLimit
 				} else if tier, err := db.GetUserTier(claims.UserID); err == nil {
+					// Use tier limit
 					limit = tier.RateLimit
 				}
 			}

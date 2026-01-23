@@ -250,6 +250,10 @@ function adminPanel() {
         viewUser(user) {
             console.log('Viewing user:', user);
             this.currentUser = {...user};
+            // Convert 50 to null (legacy default)
+            if (this.currentUser.rate_limit === 50) {
+                this.currentUser.rate_limit = null;
+            }
             console.log('Current user set to:', this.currentUser);
             this.userLimits = {
                 max_scripts: null,
@@ -263,7 +267,7 @@ function adminPanel() {
                 tier_id: parseInt(this.currentUser.tier_id),
                 subscription_expiry: this.subscriptionExpiry || null,
                 is_admin: this.currentUser.is_admin === true || this.currentUser.is_admin === 'true',
-                rate_limit: parseInt(this.currentUser.rate_limit),
+                rate_limit: this.currentUser.rate_limit ? parseInt(this.currentUser.rate_limit) : null,
                 max_scripts: this.userLimits.max_scripts ? parseInt(this.userLimits.max_scripts) : null,
                 max_script_size: this.userLimits.max_script_size ? parseInt(this.userLimits.max_script_size) : null
             };

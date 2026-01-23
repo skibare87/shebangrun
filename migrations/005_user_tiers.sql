@@ -95,3 +95,7 @@ UPDATE users SET tier_id = 1 WHERE tier_id IS NULL;
 
 -- Admins are unlimited (set to ultimate tier but will be checked separately)
 UPDATE users SET tier_id = 3 WHERE is_admin = TRUE;
+
+-- Fix rate_limit to be nullable (NULL = use tier default)
+ALTER TABLE users MODIFY rate_limit INT NULL DEFAULT NULL;
+UPDATE users SET rate_limit = NULL WHERE rate_limit = 50;
