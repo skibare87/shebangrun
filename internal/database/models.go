@@ -137,19 +137,19 @@ type GroupMember struct {
 // Tier system models
 
 type Tier struct {
-	ID                 int64
-	Name               string
-	DisplayName        string
-	PriceMonthly       float64
-	PriceYearly        float64
-	MaxStorageBytes    int64
-	MaxSecrets         int
-	MaxScripts         int
-	MaxAIGenerations   int
-	RateLimit          int
-	Features           map[string]bool // Flexible feature flags
-	CreatedAt          time.Time
-	UpdatedAt          time.Time
+	ID                 int64           `json:"id"`
+	Name               string          `json:"name"`
+	DisplayName        string          `json:"display_name"`
+	PriceMonthly       float64         `json:"price_monthly"`
+	PriceYearly        float64         `json:"price_yearly"`
+	MaxStorageBytes    int64           `json:"max_storage_bytes"`
+	MaxSecrets         int             `json:"max_secrets"`
+	MaxScripts         int             `json:"max_scripts"`
+	MaxAIGenerations   int             `json:"max_ai_generations"`
+	RateLimit          int             `json:"rate_limit"`
+	Features           map[string]bool `json:"features"`
+	CreatedAt          time.Time       `json:"created_at"`
+	UpdatedAt          time.Time       `json:"updated_at"`
 }
 
 type AIGeneration struct {

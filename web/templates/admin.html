@@ -231,8 +231,18 @@ function adminPanel() {
                 headers: { 'Authorization': 'Bearer ' + getToken() }
             })
             .then(res => res.json())
-            .then(data => this.tiers = data || [])
-            .catch(() => {});
+            .then(data => {
+                console.log('Raw tiers data:', data);
+                this.tiers = data || [];
+                console.log('Tiers assigned:', this.tiers);
+                console.log('Tiers length:', this.tiers.length);
+                if (this.tiers.length > 0) {
+                    console.log('First tier:', this.tiers[0]);
+                }
+            })
+            .catch(err => {
+                console.error('Failed to load tiers:', err);
+            });
         },
         
         viewUser(user) {
