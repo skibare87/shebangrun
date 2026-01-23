@@ -1,9 +1,11 @@
 package main
 
 import (
+	"context"
 	"log"
 	"net/http"
 
+	"shebang.run/internal/ai"
 	"shebang.run/internal/api"
 	"shebang.run/internal/config"
 	"shebang.run/internal/crypto"
@@ -66,6 +68,31 @@ func main() {
 	var secretsHandler *api.SecretsHandler
 	if udekManager != nil {
 		secretsHandler = api.NewSecretsHandler(db.DB, udekManager)
+	}
+
+	// Initialize AI providers
+	aiProviders := make(map[string]ai.AIProvider)
+	
+	// Claude
+	if claude := ai.NewClaudeProvider(); claude != nil {
+		aiProviders["claude"] = claude
+	}
+	
+	// OpenAI
+	if openai := ai.NewOpenAIProvider(); openai != nil {
+		aiProviders["openai"] = openai
+	}
+	
+	// Bedrock
+	ctx := context.Background()
+	if bedrock, err := ai.NewBedrockProvider(ctx); err == nil {
+		aiProviders["bedrock"] = bedrock
+	}
+	
+	var aiHandler *api.AIHandler
+	if len(aiProviders) > 0 {
+		aiHandler = api.NewAIHandler(db.DB, aiProviders)
+		log.Printf("AI providers initialized: %d available", len(aiProviders))
 	}
 
 	r := chi.NewRouter()
@@ -194,6 +221,16 @@ func main() {
 		r.Use(middleware.AuthMiddleware(cfg.JWTSecret, db))
 		r.Get("/scripts", shareHandler.ListSharedScripts)
 	})
+
+	// AI generation
+	if aiHandler != nil {
+		r.Route("/api/ai", func(r chi.Router) {
+			r.Use(middleware.AuthMiddleware(cfg.JWTSecret, db))
+			r.Use(middleware.TierMiddleware(db))
+			r.Post("/generate", aiHandler.Generate)
+			r.Get("/usage", aiHandler.GetUsage)
+		})
+	}
 
 	r.Route("/api/admin", func(r chi.Router) {
 		r.Use(middleware.AuthMiddleware(cfg.JWTSecret, db))

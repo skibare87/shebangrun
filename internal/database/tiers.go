@@ -1,23 +1,34 @@
 package database
 
+import "encoding/json"
+
 // GetUserTier gets the tier for a user
 func (db *DB) GetUserTier(userID int64) (*Tier, error) {
 	tier := &Tier{}
+	var featuresJSON string
+	
 	err := db.QueryRow(`
 		SELECT t.id, t.name, t.display_name, t.price_monthly, t.max_storage_bytes, 
 		       t.max_secrets, t.max_scripts, t.max_ai_generations, t.rate_limit,
-		       t.allow_public, t.allow_unlisted, t.allow_private, t.allow_ai_generation,
-		       t.created_at, t.updated_at
+		       t.features, t.created_at, t.updated_at
 		FROM tiers t
 		JOIN users u ON u.tier_id = t.id
 		WHERE u.id = ?
 	`, userID).Scan(
 		&tier.ID, &tier.Name, &tier.DisplayName, &tier.PriceMonthly,
 		&tier.MaxStorageBytes, &tier.MaxSecrets, &tier.MaxScripts, &tier.MaxAIGenerations,
-		&tier.RateLimit, &tier.AllowPublic, &tier.AllowUnlisted, &tier.AllowPrivate,
-		&tier.AllowAIGeneration, &tier.CreatedAt, &tier.UpdatedAt,
+		&tier.RateLimit, &featuresJSON, &tier.CreatedAt, &tier.UpdatedAt,
 	)
-	return tier, err
+	
+	if err != nil {
+		return nil, err
+	}
+	
+	// Parse features JSON
+	tier.Features = make(map[string]bool)
+	json.Unmarshal([]byte(featuresJSON), &tier.Features)
+	
+	return tier, nil
 }
 
 // GetAllTiers lists all available tiers
@@ -25,8 +36,7 @@ func (db *DB) GetAllTiers() ([]*Tier, error) {
 	rows, err := db.Query(`
 		SELECT id, name, display_name, price_monthly, max_storage_bytes, 
 		       max_secrets, max_scripts, max_ai_generations, rate_limit,
-		       allow_public, allow_unlisted, allow_private, allow_ai_generation,
-		       created_at, updated_at
+		       features, created_at, updated_at
 		FROM tiers
 		ORDER BY price_monthly ASC
 	`)
@@ -38,14 +48,19 @@ func (db *DB) GetAllTiers() ([]*Tier, error) {
 	var tiers []*Tier
 	for rows.Next() {
 		tier := &Tier{}
+		var featuresJSON string
+		
 		if err := rows.Scan(
 			&tier.ID, &tier.Name, &tier.DisplayName, &tier.PriceMonthly,
 			&tier.MaxStorageBytes, &tier.MaxSecrets, &tier.MaxScripts, &tier.MaxAIGenerations,
-			&tier.RateLimit, &tier.AllowPublic, &tier.AllowUnlisted, &tier.AllowPrivate,
-			&tier.AllowAIGeneration, &tier.CreatedAt, &tier.UpdatedAt,
+			&tier.RateLimit, &featuresJSON, &tier.CreatedAt, &tier.UpdatedAt,
 		); err != nil {
 			return nil, err
 		}
+		
+		tier.Features = make(map[string]bool)
+		json.Unmarshal([]byte(featuresJSON), &tier.Features)
+		
 		tiers = append(tiers, tier)
 	}
 	return tiers, rows.Err()
@@ -119,7 +134,7 @@ func (db *DB) CanGenerateAI(userID int64, isAdmin bool) (bool, int, error) {
 		return false, 0, err
 	}
 	
-	if !tier.AllowAIGeneration {
+	if !tier.Features["ai_generation"] {
 		return false, 0, nil
 	}
 	

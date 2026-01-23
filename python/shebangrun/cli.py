@@ -816,6 +816,117 @@ def cmd_share(args):
         print(f"Error: {e}", file=sys.stderr)
         sys.exit(1)
 
+def cmd_infer(args):
+    """Generate script with AI"""
+    config = load_config()
+    if not config.get('SHEBANG_CLIENT_ID'):
+        print("Error: Not logged in. Run: shebang login", file=sys.stderr)
+        sys.exit(1)
+    
+    if args.save and (not args.name or not args.visibility):
+        print("Error: -s/--save requires -n/--name and -v/--visibility", file=sys.stderr)
+        sys.exit(1)
+    
+    import requests
+    
+    # Generate script
+    payload = {
+        "prompt": args.prompt,
+        "args": args.args or []
+    }
+    if args.provider:
+        payload["provider"] = args.provider
+    
+    print("Generating script...", file=sys.stderr)
+    
+    try:
+        response = requests.post(
+            f"{config['SHEBANG_URL']}/api/ai/generate",
+            auth=(config['SHEBANG_CLIENT_ID'], config['SHEBANG_CLIENT_SECRET']),
+            json=payload
+        )
+        response.raise_for_status()
+        result = response.json()
+        
+        script = result['script']
+        print(f"✓ Generated with {result['provider']} ({result['tokens']} tokens)", file=sys.stderr)
+        print(file=sys.stderr)
+        
+        # Save to account if requested
+        if args.save:
+            client = ShebangClient(url=config['SHEBANG_URL'].replace('https://', '').replace('http://', ''))
+            client.session.auth = (config['SHEBANG_CLIENT_ID'], config['SHEBANG_CLIENT_SECRET'])
+            
+            visibility_map = {'priv': 'private', 'unlist': 'unlisted', 'public': 'public'}
+            visibility = visibility_map.get(args.visibility, args.visibility)
+            
+            client.create_script(
+                name=args.name,
+                content=script,
+                description=args.description or f"AI generated: {args.prompt[:50]}",
+                visibility=visibility
+            )
+            print(f"✓ Saved as '{args.name}'", file=sys.stderr)
+            print(f"  URL: {config['SHEBANG_URL']}/{config['SHEBANG_USERNAME']}/{args.name}", file=sys.stderr)
+            return
+        
+        # Save to file if requested
+        if args.output:
+            with open(args.output, 'w') as f:
+                f.write(script)
+            print(f"✓ Saved to {args.output}", file=sys.stderr)
+            if args.eval:
+                import os
+                os.chmod(args.output, 0o755)
+        
+        # Execute if requested
+        if args.eval:
+            import tempfile
+            import subprocess
+            
+            if not args.output:
+                fd, script_file = tempfile.mkstemp(suffix='.sh')
+                os.close(fd)
+                with open(script_file, 'w') as f:
+                    f.write(script)
+                os.chmod(script_file, 0o755)
+            else:
+                script_file = args.output
+            
+            if not args.accept:
+                print("Generated script:")
+                print("=" * 60)
+                print(script)
+                print("=" * 60)
+                print()
+                confirm = input("Execute this script? (y/N): ").strip().lower()
+                if confirm != 'y':
+                    if not args.output:
+                        os.unlink(script_file)
+                    print("Cancelled")
+                    sys.exit(0)
+            
+            print("Executing...", file=sys.stderr)
+            result = subprocess.run([script_file] + (args.args or []))
+            
+            if not args.output:
+                os.unlink(script_file)
+            
+            sys.exit(result.returncode)
+        else:
+            # Just print the script
+            print(script)
+            
+    except requests.HTTPError as e:
+        if e.response.status_code == 403:
+            print("Error: AI generation not available in your tier or limit reached", file=sys.stderr)
+        else:
+            print(f"Error: {e.response.text}", file=sys.stderr)
+        sys.exit(1)
+    except Exception as e:
+        print(f"Error: {e}", file=sys.stderr)
+        sys.exit(1)
+
 def main():
     parser = argparse.ArgumentParser(
         prog='shebang',
@@ -918,6 +1029,19 @@ def main():
     share_parser.add_argument('-l', '--link', action='store_true', help='Enable "anyone with link" sharing')
     share_parser.add_argument('-r', '--remove', action='store_true', help='Remove access instead of adding')
     
+    # Infer (AI generation)
+    infer_parser = subparsers.add_parser('infer', help='Generate script with AI')
+    infer_parser.add_argument('prompt', help='Description of what the script should do')
+    infer_parser.add_argument('args', nargs='*', help='Script arguments')
+    infer_parser.add_argument('-e', '--eval', action='store_true', help='Execute the generated script')
+    infer_parser.add_argument('-a', '--accept', action='store_true', help='Auto-accept execution')
+    infer_parser.add_argument('-O', '--output', help='Save to file')
+    infer_parser.add_argument('-s', '--save', action='store_true', help='Save to shebang account')
+    infer_parser.add_argument('-n', '--name', help='Script name (required with -s)')
+    infer_parser.add_argument('-v', '--visibility', choices=['priv', 'unlist', 'public'], help='Visibility (required with -s)')
+    infer_parser.add_argument('-d', '--description', help='Description (for -s)')
+    infer_parser.add_argument('-p', '--provider', choices=['claude', 'openai', 'bedrock'], help='AI provider')
+    
     args = parser.parse_args()
     
     if not args.command:
@@ -958,6 +1082,8 @@ def main():
         cmd_list_shares(args)
     elif args.command == 'share':
         cmd_share(args)
+    elif args.command == 'infer':
+        cmd_infer(args)
 
 if __name__ == '__main__':
     main()

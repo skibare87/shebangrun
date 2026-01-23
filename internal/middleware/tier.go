@@ -2,6 +2,7 @@ package middleware
 
 import (
 	"context"
+	"encoding/json"
 	"net/http"
 	
 	"shebang.run/internal/database"
@@ -53,16 +54,6 @@ func CheckFeature(ctx context.Context, feature string) bool {
 		return true
 	}
 	
-	switch feature {
-	case "public":
-		return tier.AllowPublic
-	case "unlisted":
-		return tier.AllowUnlisted
-	case "private":
-		return tier.AllowPrivate
-	case "ai_generation":
-		return tier.AllowAIGeneration
-	default:
-		return false
-	}
+	// Check feature in JSON map
+	return tier.Features[feature]
 }

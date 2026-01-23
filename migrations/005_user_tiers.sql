@@ -1,6 +1,6 @@
 -- Migration 005: User tiers and AI generation limits
 
--- Tiers table
+-- Tiers table with flexible features
 CREATE TABLE tiers (
     id BIGINT PRIMARY KEY AUTO_INCREMENT,
     name VARCHAR(50) UNIQUE NOT NULL,
@@ -11,19 +11,19 @@ CREATE TABLE tiers (
     max_scripts INT NOT NULL,
     max_ai_generations INT NOT NULL,
     rate_limit INT NOT NULL,
-    allow_public BOOLEAN DEFAULT TRUE,
-    allow_unlisted BOOLEAN DEFAULT FALSE,
-    allow_private BOOLEAN DEFAULT FALSE,
-    allow_ai_generation BOOLEAN DEFAULT FALSE,
+    features JSON NOT NULL,  -- Flexible feature flags
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 );
 
 -- Seed default tiers
-INSERT INTO tiers (name, display_name, price_monthly, max_storage_bytes, max_secrets, max_scripts, max_ai_generations, rate_limit, allow_public, allow_unlisted, allow_private, allow_ai_generation) VALUES
-('free', 'Free', 0.00, 10485760, 5, 25, 0, 50, TRUE, FALSE, FALSE, FALSE),
-('pro', 'Pro', 10.00, 524288000, 50, 100, 5, 200, TRUE, TRUE, FALSE, FALSE),
-('ultimate', 'Ultimate', 20.00, 1073741824, 500, 500, 500, 1000, TRUE, TRUE, TRUE, TRUE);
+INSERT INTO tiers (name, display_name, price_monthly, max_storage_bytes, max_secrets, max_scripts, max_ai_generations, rate_limit, features) VALUES
+('free', 'Free', 0.00, 10485760, 5, 25, 0, 50, 
+ '{"public": true, "unlisted": false, "private": false, "ai_generation": false, "api_access": true}'),
+('pro', 'Pro', 10.00, 524288000, 50, 100, 5, 200, 
+ '{"public": true, "unlisted": true, "private": false, "ai_generation": false, "api_access": true, "priority_support": true}'),
+('ultimate', 'Ultimate', 20.00, 1073741824, 500, 500, 500, 1000, 
+ '{"public": true, "unlisted": true, "private": true, "ai_generation": true, "api_access": true, "priority_support": true, "advanced_analytics": true}');
 
 -- Add tier to users (default to free tier)
 ALTER TABLE users ADD COLUMN tier_id BIGINT DEFAULT 1;

@@ -146,10 +146,7 @@ type Tier struct {
 	MaxScripts         int
 	MaxAIGenerations   int
 	RateLimit          int
-	AllowPublic        bool
-	AllowUnlisted      bool
-	AllowPrivate       bool
-	AllowAIGeneration  bool
+	Features           map[string]bool // Flexible feature flags
 	CreatedAt          time.Time
 	UpdatedAt          time.Time
 }

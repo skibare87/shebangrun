@@ -294,6 +294,24 @@ class ShebangClient:
         response = self.session.get(url)
         response.raise_for_status()
         return response.json()
+    
+    # AI Generation
+    def generate_script(self, prompt: str, args: list = None, provider: str = None) -> dict:
+        """Generate script with AI"""
+        url = f"{self.base_url}/api/ai/generate"
+        payload = {"prompt": prompt, "args": args or []}
+        if provider:
+            payload["provider"] = provider
+        response = self.session.post(url, json=payload)
+        response.raise_for_status()
+        return response.json()
+    
+    def get_ai_usage(self) -> dict:
+        """Get AI generation usage stats"""
+        url = f"{self.base_url}/api/ai/usage"
+        response = self.session.get(url)
+        response.raise_for_status()
+        return response.json()
 
 
 def run(username: str, script: str, key: Optional[str] = None, 
