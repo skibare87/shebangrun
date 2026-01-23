@@ -29,6 +29,14 @@ type Config struct {
 	
 	// Secrets store
 	SecretsBackend string
+	
+	// AI providers
+	ClaudeAPIKey   string
+	ClaudeModel    string
+	OpenAIAPIKey   string
+	OpenAIModel    string
+	BedrockModelID string
+	AWSRegion      string
 }
 
 func Load() *Config {
@@ -52,6 +60,12 @@ func Load() *Config {
 		MasterKeySource:  getEnv("MASTER_KEY_SOURCE", "env"),
 		MasterKeyEnv:     getEnv("MASTER_KEY_ENV", "MASTER_ENCRYPTION_KEY"),
 		SecretsBackend:   getEnv("SECRETS_BACKEND", "database"),
+		ClaudeAPIKey:     getEnv("CLAUDE_API_KEY", ""),
+		ClaudeModel:      getEnv("CLAUDE_MODEL", "claude-3-5-sonnet-20241022"),
+		OpenAIAPIKey:     getEnv("OPENAI_API_KEY", ""),
+		OpenAIModel:      getEnv("OPENAI_MODEL", "gpt-4"),
+		BedrockModelID:   getEnv("BEDROCK_MODEL_ID", "anthropic.claude-3-5-sonnet-20241022-v2:0"),
+		AWSRegion:        getEnv("AWS_REGION", "us-east-1"),
 	}
 }
 
