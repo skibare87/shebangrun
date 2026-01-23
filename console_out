@@ -1,40 +1,203 @@
-content_script.js:1 content script loaded 9c3f65bc-4310-4853-81dc-016c113e1fd8
+content_script.js:1 content script loaded 6f1af3a7-56c6-45b7-9df6-2b63e04efba7
 credentials.js:1 Injecting credentials patch
 (index):64 cdn.tailwindcss.com should not be used in production. To use Tailwind CSS in production, install it as a PostCSS plugin or use the Tailwind CLI: https://tailwindcss.com/docs/installation
 (anonymous) @ (index):64
-cdn.min.js:1 Alpine Expression Error: Cannot read properties of null (reading 'tier_id')
+script-editor:213 Uncaught SyntaxError: Unexpected token 'const'
+cdn.min.js:1 Alpine Expression Error: scriptEditor is not defined
 
-Expression: "currentUser.tier_id"
+Expression: "scriptEditor()"
 
- <select x-model=​"currentUser.tier_id" class=​"w-full px-3 py-2 border rounded focus:​ring-2 focus:​ring-indigo-500">​…​</select>​
+ <div x-data=​"scriptEditor()​" x-init=​"init()​">​…​</div>​
 ee @ cdn.min.js:1
-cdn.min.js:1 Alpine Expression Error: Cannot read properties of null (reading 'is_admin')
+cdn.min.js:1 Alpine Expression Error: init is not defined
 
-Expression: "currentUser.is_admin"
+Expression: "init()"
 
- <select x-model=​"currentUser.is_admin" class=​"w-full px-3 py-2 border rounded focus:​ring-2 focus:​ring-indigo-500">​…​</select>​
+ <div x-data=​"scriptEditor()​" x-init=​"init()​">​…​</div>​
 ee @ cdn.min.js:1
-cdn.min.js:1 Alpine Expression Error: Cannot read properties of null (reading 'rate_limit')
+cdn.min.js:1 Alpine Expression Error: scriptId is not defined
 
-Expression: "currentUser.rate_limit"
+Expression: "scriptId ? 'Edit Script' : 'New Script'"
 
- <input type=​"number" x-model=​"currentUser.rate_limit" class=​"w-full px-3 py-2 border rounded focus:​ring-2 focus:​ring-indigo-500">​
+ <h1 class=​"text-3xl font-bold" x-text=​"scriptId ? 'Edit Script' :​ 'New Script'">​</h1>​
 ee @ cdn.min.js:1
-cdn.min.js:5 Uncaught TypeError: Cannot read properties of null (reading 'tier_id')
-cdn.min.js:5 Uncaught TypeError: Cannot read properties of null (reading 'is_admin')
-cdn.min.js:5 Uncaught TypeError: Cannot read properties of null (reading 'rate_limit')
+cdn.min.js:1 Alpine Expression Error: scriptId is not defined
+
+Expression: "scriptId"
+
+ <input type=​"text" x-model=​"script.name" required :disabled=​"scriptId" class=​"w-full px-3 py-2 border rounded focus:​ring-2 focus:​ring-indigo-500" placeholder=​"my-script">​
+ee @ cdn.min.js:1
+cdn.min.js:1 Alpine Expression Error: script is not defined
+
+Expression: "script.name"
+
+ <input type=​"text" x-model=​"script.name" required :disabled=​"scriptId" class=​"w-full px-3 py-2 border rounded focus:​ring-2 focus:​ring-indigo-500" placeholder=​"my-script">​
+ee @ cdn.min.js:1
+cdn.min.js:1 Alpine Expression Error: script is not defined
+
+Expression: "script.description"
+
+ <input type=​"text" x-model=​"script.description" class=​"w-full px-3 py-2 border rounded focus:​ring-2 focus:​ring-indigo-500" placeholder=​"What does this script do?">​
+ee @ cdn.min.js:1
+cdn.min.js:1 Alpine Expression Error: script is not defined
+
+Expression: "script.visibility"
+
+ <select x-model=​"script.visibility" @change=​"visibilityChanged" class=​"w-full px-3 py-2 border rounded focus:​ring-2 focus:​ring-indigo-500">​…​</select>​
+ee @ cdn.min.js:1
+cdn.min.js:1 Alpine Expression Error: tierFeatures is not defined
+
+Expression: "tierFeatures.unlisted"
+
+ <option x-show=​"tierFeatures.unlisted" value=​"unlisted" style=​"display:​ none;​">​Unlisted​</option>​slot
+ee @ cdn.min.js:1
+cdn.min.js:1 Alpine Expression Error: tierFeatures is not defined
+
+Expression: "tierFeatures.private"
+
+ <option x-show=​"tierFeatures.private" value=​"private" style=​"display:​ none;​">​Private - Only you can access​</option>​slot
+ee @ cdn.min.js:1
+cdn.min.js:1 Alpine Expression Error: tierFeatures is not defined
+
+Expression: "!tierFeatures.unlisted && !tierFeatures.private"
+
+ <p x-show=​"!tierFeatures.unlisted && !tierFeatures.private" class=​"text-xs text-gray-500 mt-1" style=​"display:​ none;​">​…​</p>​
+ee @ cdn.min.js:1
+cdn.min.js:1 Alpine Expression Error: script is not defined
+
+Expression: "script.visibility === 'private'"
+
+ <div x-show=​"script.visibility === 'private'" class=​"bg-yellow-50 border border-yellow-200 p-4 rounded" style=​"display:​ none;​">​…​</div>​
+ee @ cdn.min.js:1
+cdn.min.js:1 Alpine Expression Error: script is not defined
+
+Expression: "script.visibility === 'private'"
+
+ <select x-model=​"script.keypair_id" :required=​"script.visibility === 'private'" class=​"w-full px-3 py-2 border rounded focus:​ring-2 focus:​ring-indigo-500" required=​"required">​…​</select>​
+ee @ cdn.min.js:1
+cdn.min.js:1 Alpine Expression Error: script is not defined
+
+Expression: "script.keypair_id"
+
+ <select x-model=​"script.keypair_id" :required=​"script.visibility === 'private'" class=​"w-full px-3 py-2 border rounded focus:​ring-2 focus:​ring-indigo-500" required=​"required">​…​</select>​
+ee @ cdn.min.js:1
+cdn.min.js:1 Alpine Expression Error: keys is not defined
+
+Expression: "keys"
+
+ <template x-for=​"key in keys" :key=​"key.id">​…​</template>​slot
+ee @ cdn.min.js:1
+cdn.min.js:1 Alpine Expression Error: scriptId is not defined
+
+Expression: "scriptId && needsDecryption"
+
+ <div x-show=​"scriptId && needsDecryption" class=​"bg-red-50 border border-red-200 p-4 rounded" style=​"display:​ none;​">​…​</div>​
+ee @ cdn.min.js:1
+cdn.min.js:1 Alpine Expression Error: privateKey is not defined
+
+Expression: "privateKey"
+
+ <textarea x-model=​"privateKey" class=​"w-full px-3 py-2 border rounded font-mono text-xs" rows=​"8" placeholder=​"-----BEGIN RSA PRIVATE KEY-----
+...
+-----END RSA PRIVATE KEY-----">​</textarea>​
+ee @ cdn.min.js:1
+cdn.min.js:1 Alpine Expression Error: scriptId is not defined
+
+Expression: "scriptId"
+
+ <div x-show=​"scriptId" style=​"display:​ none;​">​…​</div>​
+ee @ cdn.min.js:1
+cdn.min.js:1 Alpine Expression Error: script is not defined
+
+Expression: "script.tag"
+
+ <select x-model=​"script.tag" class=​"w-full px-3 py-2 border rounded focus:​ring-2 focus:​ring-indigo-500">​…​</select>​
+ee @ cdn.min.js:1
+cdn.min.js:1 Alpine Expression Error: needsDecryption is not defined
+
+Expression: "needsDecryption"
+
+ <textarea id=​"code-editor" x-model=​"script.content" required :disabled=​"needsDecryption" class=​"w-full px-3 py-2 border rounded font-mono text-sm focus:​ring-2 focus:​ring-indigo-500" rows=​"20" placeholder=​"#!/​bin/​bash
+echo 'Hello World'">​</textarea>​
+ee @ cdn.min.js:1
+cdn.min.js:1 Alpine Expression Error: script is not defined
+
+Expression: "script.content"
+
+ <textarea id=​"code-editor" x-model=​"script.content" required :disabled=​"needsDecryption" class=​"w-full px-3 py-2 border rounded font-mono text-sm focus:​ring-2 focus:​ring-indigo-500" rows=​"20" placeholder=​"#!/​bin/​bash
+echo 'Hello World'">​</textarea>​
+ee @ cdn.min.js:1
+cdn.min.js:1 Alpine Expression Error: needsDecryption is not defined
+
+Expression: "needsDecryption"
+
+ <p x-show=​"needsDecryption" class=​"text-xs text-red-600 mt-1" style=​"display:​ none;​">​Decrypt the script first to edit​</p>​
+ee @ cdn.min.js:1
+cdn.min.js:1 Alpine Expression Error: error is not defined
+
+Expression: "error"
+
+ <div x-show=​"error" class=​"bg-red-50 text-red-600 p-3 rounded" x-text=​"error" style=​"display:​ none;​">​</div>​
+ee @ cdn.min.js:1
+cdn.min.js:1 Alpine Expression Error: error is not defined
+
+Expression: "error"
+
+ <div x-show=​"error" class=​"bg-red-50 text-red-600 p-3 rounded" x-text=​"error" style=​"display:​ none;​">​</div>​
+ee @ cdn.min.js:1
+cdn.min.js:1 Alpine Expression Error: success is not defined
+
+Expression: "success"
+
+ <div x-show=​"success" class=​"bg-green-50 text-green-600 p-3 rounded" style=​"display:​ none;​">​Script saved successfully!​</div>​
+ee @ cdn.min.js:1
+cdn.min.js:1 Alpine Expression Error: needsDecryption is not defined
+
+Expression: "needsDecryption"
+
+ <button type=​"submit" :disabled=​"needsDecryption" :class=​"needsDecryption ? 'bg-gray-400 cursor-not-allowed' :​ 'bg-indigo-600 hover:​bg-indigo-700'" class=​"text-white px-6 py-2 rounded">​…​</button>​
+ee @ cdn.min.js:1
+cdn.min.js:1 Alpine Expression Error: needsDecryption is not defined
+
+Expression: "needsDecryption ? 'bg-gray-400 cursor-not-allowed' : 'bg-indigo-600 hover:bg-indigo-700'"
+
+ <button type=​"submit" :disabled=​"needsDecryption" :class=​"needsDecryption ? 'bg-gray-400 cursor-not-allowed' :​ 'bg-indigo-600 hover:​bg-indigo-700'" class=​"text-white px-6 py-2 rounded">​…​</button>​
+ee @ cdn.min.js:1
+cdn.min.js:1 Alpine Expression Error: scriptId is not defined
+
+Expression: "scriptId ? 'Update Script' : 'Create Script'"
+
+ <span x-text=​"scriptId ? 'Update Script' :​ 'Create Script'">​</span>​
+ee @ cdn.min.js:1
+cdn.min.js:5 Uncaught ReferenceError: scriptEditor is not defined
+cdn.min.js:5 Uncaught ReferenceError: init is not defined
+cdn.min.js:5 Uncaught ReferenceError: scriptId is not defined
+cdn.min.js:5 Uncaught ReferenceError: scriptId is not defined
+cdn.min.js:5 Uncaught ReferenceError: script is not defined
+cdn.min.js:5 Uncaught ReferenceError: script is not defined
+cdn.min.js:5 Uncaught ReferenceError: script is not defined
+cdn.min.js:5 Uncaught ReferenceError: tierFeatures is not defined
+cdn.min.js:5 Uncaught ReferenceError: tierFeatures is not defined
+cdn.min.js:5 Uncaught ReferenceError: tierFeatures is not defined
+cdn.min.js:5 Uncaught ReferenceError: script is not defined
+cdn.min.js:5 Uncaught ReferenceError: script is not defined
+cdn.min.js:5 Uncaught ReferenceError: script is not defined
+cdn.min.js:5 Uncaught ReferenceError: keys is not defined
+cdn.min.js:5 Uncaught ReferenceError: scriptId is not defined
+cdn.min.js:5 Uncaught ReferenceError: privateKey is not defined
+cdn.min.js:5 Uncaught ReferenceError: scriptId is not defined
+cdn.min.js:5 Uncaught ReferenceError: script is not defined
+cdn.min.js:5 Uncaught ReferenceError: needsDecryption is not defined
+cdn.min.js:5 Uncaught ReferenceError: script is not defined
+cdn.min.js:5 Uncaught ReferenceError: needsDecryption is not defined
+cdn.min.js:5 Uncaught ReferenceError: error is not defined
+cdn.min.js:5 Uncaught ReferenceError: error is not defined
+cdn.min.js:5 Uncaught ReferenceError: success is not defined
+cdn.min.js:5 Uncaught ReferenceError: needsDecryption is not defined
+cdn.min.js:5 Uncaught ReferenceError: needsDecryption is not defined
+cdn.min.js:5 Uncaught ReferenceError: scriptId is not defined
 content_script.js:1 Injecting javascript to wrap FileSystemFileHandle.getFile()
 upload_fileaccessapi.js:1 Injecting file system access api patch
 upload_element_creation.js:1 Injecting element creation patch
 upload_element_creation.js:1 First element creation parent found
-api/admin/users:1  Failed to load resource: the server responded with a status of 500 ()
-admin:310 Raw tiers data: Array(3)
-admin:312 Tiers assigned: Proxy(Array)
-admin:313 Tiers length: 3
-admin:315 First tier: Proxy(Object)
-api/admin/users:1  Failed to load resource: the server responded with a status of 500 ()
-admin:310 Raw tiers data: Array(3)
-admin:312 Tiers assigned: Proxy(Array)
-admin:313 Tiers length: 3
-admin:315 First tier: Proxy(Object)
 

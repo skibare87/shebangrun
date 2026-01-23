@@ -28,6 +28,11 @@ func main() {
 	}
 	defer db.Close()
 
+	// Run migrations
+	if err := database.RunMigrations(db.DB, "migrations"); err != nil {
+		log.Fatalf("Failed to run migrations: %v", err)
+	}
+
 	var store storage.Storage
 	if cfg.StorageType == "s3" {
 		store, err = storage.NewS3Storage(cfg.S3Endpoint, cfg.S3AccessKey, cfg.S3SecretKey, cfg.S3Bucket, false)
