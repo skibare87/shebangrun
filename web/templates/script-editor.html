@@ -134,9 +134,6 @@ function scriptEditor() {
             
             await this.loadTierFeatures();
             this.setDefaultVisibility();
-                return;
-            }
-            
             const params = new URLSearchParams(window.location.search);
             this.scriptId = params.get('id');
             
@@ -165,7 +162,10 @@ function scriptEditor() {
                 });
                 if (response.ok) {
                     const tier = await response.json();
+                    console.log('Loaded tier:', tier);
+                    console.log('Tier features:', tier.features);
                     this.tierFeatures = tier.features || { public: true, unlisted: false, private: false };
+                    console.log('Set tierFeatures to:', this.tierFeatures);
                 }
             } catch (e) {
                 console.error('Failed to load tier:', e);
