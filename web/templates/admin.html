@@ -52,7 +52,6 @@
                                 <span x-show="user.is_admin" class="bg-purple-100 text-purple-800 px-2 py-1 rounded text-xs">Admin</span>
                                 <span x-show="!user.is_admin" class="bg-gray-100 text-gray-800 px-2 py-1 rounded text-xs">User</span>
                             </td>
-                            <td class="px-4 py-3 text-sm" x-text="user.rate_limit + ' req/min'"></td>
                             <td class="px-4 py-3 text-sm text-gray-600" x-text="new Date(user.created_at).toLocaleDateString()"></td>
                             <td class="px-4 py-3 text-sm space-x-2">
                                 <button @click="viewUser(user)" class="text-indigo-600 hover:text-indigo-700">View</button>
