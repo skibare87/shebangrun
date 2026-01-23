@@ -141,6 +141,7 @@ type Tier struct {
 	Name               string
 	DisplayName        string
 	PriceMonthly       float64
+	PriceYearly        float64
 	MaxStorageBytes    int64
 	MaxSecrets         int
 	MaxScripts         int
@@ -176,8 +177,11 @@ type Subscription struct {
 	ID                    int64
 	UserID                int64
 	TierID                int64
+	BillingCycle          string
 	Status                string
 	StartedAt             time.Time
-	ExpiresAt             *time.Time
+	CurrentPeriodEnd      *time.Time
+	CancelAtPeriodEnd     bool
 	StripeSubscriptionID  string
+	StripeCustomerID      string
 }

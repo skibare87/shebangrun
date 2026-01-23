@@ -68,6 +68,23 @@ func (h *AccountHandler) ChangePassword(w http.ResponseWriter, r *http.Request) 
 	w.Write([]byte(`{"status":"ok"}`))
 }
 
+func (h *AccountHandler) GetTier(w http.ResponseWriter, r *http.Request) {
+	claims, ok := middleware.GetUserFromContext(r.Context())
+	if !ok {
+		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+		return
+	}
+	
+	tier, err := h.db.GetUserTier(claims.UserID)
+	if err != nil {
+		http.Error(w, "Failed to get tier", http.StatusInternalServerError)
+		return
+	}
+	
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(tier)
+}
+
 func (h *AccountHandler) ExportData(w http.ResponseWriter, r *http.Request) {
 	claims, ok := middleware.GetUserFromContext(r.Context())
 	if !ok {

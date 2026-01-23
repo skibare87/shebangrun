@@ -28,15 +28,19 @@ type UserListResponse struct {
 	Username  string `json:"username"`
 	Email     string `json:"email"`
 	IsAdmin   bool   `json:"is_admin"`
+	TierID    int64  `json:"tier_id"`
+	TierName  string `json:"tier_name"`
 	RateLimit int    `json:"rate_limit"`
 	CreatedAt string `json:"created_at"`
 }
 
 type SetLimitsRequest struct {
-	IsAdmin       *bool  `json:"is_admin"`
-	MaxScripts    *int   `json:"max_scripts"`
-	MaxScriptSize *int64 `json:"max_script_size"`
-	RateLimit     *int   `json:"rate_limit"`
+	IsAdmin            *bool      `json:"is_admin"`
+	TierID             *int64     `json:"tier_id"`
+	SubscriptionExpiry *string    `json:"subscription_expiry"` // ISO date or null for permanent
+	MaxScripts         *int       `json:"max_scripts"`
+	MaxScriptSize      *int64     `json:"max_script_size"`
+	RateLimit          *int       `json:"rate_limit"`
 }
 
 type ConfigResponse struct {
@@ -71,11 +75,20 @@ func (h *AdminHandler) ListUsers(w http.ResponseWriter, r *http.Request) {
 
 	var response []UserListResponse
 	for _, u := range users {
+		// Get tier name
+		tier, _ := h.db.GetUserTier(u.ID)
+		tierName := "Unknown"
+		if tier != nil {
+			tierName = tier.DisplayName
+		}
+		
 		response = append(response, UserListResponse{
 			ID:        u.ID,
 			Username:  u.Username,
 			Email:     u.Email,
 			IsAdmin:   u.IsAdmin,
+			TierID:    u.TierID,
+			TierName:  tierName,
 			RateLimit: u.RateLimit,
 			CreatedAt: u.CreatedAt.Format("2006-01-02T15:04:05Z"),
 		})
@@ -120,9 +133,39 @@ func (h *AdminHandler) SetUserLimits(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 	}
+	
+	if req.TierID != nil {
+		if err := h.db.UpdateUserTier(userID, *req.TierID); err != nil {
+			http.Error(w, "Failed to set tier", http.StatusInternalServerError)
+			return
+		}
+		
+		// Set subscription management
+		var expiresAt interface{} = nil
+		if req.SubscriptionExpiry != nil && *req.SubscriptionExpiry != "" {
+			expiresAt = *req.SubscriptionExpiry
+		}
+		
+		h.db.Exec(`
+			UPDATE users 
+			SET subscription_managed_by = 'admin', subscription_expires_at = ?
+			WHERE id = ?
+		`, expiresAt, userID)
+	}
 
 	w.WriteHeader(http.StatusOK)
 	w.Write([]byte(`{"status":"ok"}`))
+}
+
+func (h *AdminHandler) ListTiers(w http.ResponseWriter, r *http.Request) {
+	tiers, err := h.db.GetAllTiers()
+	if err != nil {
+		http.Error(w, "Failed to get tiers", http.StatusInternalServerError)
+		return
+	}
+	
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(tiers)
 }
 
 func (h *AdminHandler) GetConfig(w http.ResponseWriter, r *http.Request) {

@@ -10,6 +10,7 @@ import (
 	"shebang.run/internal/config"
 	"shebang.run/internal/crypto"
 	"shebang.run/internal/database"
+	"shebang.run/internal/jobs"
 	"shebang.run/internal/kms"
 	"shebang.run/internal/middleware"
 	"shebang.run/internal/storage"
@@ -94,6 +95,9 @@ func main() {
 		aiHandler = api.NewAIHandler(db.DB, aiProviders)
 		log.Printf("AI providers initialized: %d available", len(aiProviders))
 	}
+
+	// Start background jobs
+	jobs.StartSubscriptionChecker(db.DB)
 
 	r := chi.NewRouter()
 	
@@ -236,6 +240,7 @@ func main() {
 		r.Use(middleware.AuthMiddleware(cfg.JWTSecret, db))
 		r.Use(middleware.AdminMiddleware)
 		r.Get("/users", adminHandler.ListUsers)
+		r.Get("/tiers", adminHandler.ListTiers)
 		r.Put("/users/{id}/limits", adminHandler.SetUserLimits)
 		r.Put("/users/{id}/password", adminHandler.ResetUserPassword)
 		r.Delete("/users/{id}", adminHandler.DeleteUser)
@@ -244,6 +249,7 @@ func main() {
 
 	r.Route("/api/account", func(r chi.Router) {
 		r.Use(middleware.AuthMiddleware(cfg.JWTSecret, db))
+		r.Get("/tier", accountHandler.GetTier)
 		r.Put("/password", accountHandler.ChangePassword)
 		r.Get("/export", accountHandler.ExportData)
 		r.Delete("/", accountHandler.DeleteAccount)

@@ -29,6 +29,14 @@ INSERT INTO tiers (name, display_name, price_monthly, max_storage_bytes, max_sec
 ALTER TABLE users ADD COLUMN tier_id BIGINT DEFAULT 1;
 ALTER TABLE users ADD FOREIGN KEY (tier_id) REFERENCES tiers(id);
 
+-- Add billing cycle support
+ALTER TABLE tiers ADD COLUMN price_yearly DECIMAL(10,2) NULL AFTER price_monthly;
+
+-- Update yearly prices (20% discount)
+UPDATE tiers SET price_yearly = 0.00 WHERE name = 'free';
+UPDATE tiers SET price_yearly = 96.00 WHERE name = 'pro';      -- $10/mo * 12 * 0.8 = $96/yr
+UPDATE tiers SET price_yearly = 192.00 WHERE name = 'ultimate'; -- $20/mo * 12 * 0.8 = $192/yr
+
 -- AI generation tracking
 CREATE TABLE ai_generations (
     id BIGINT PRIMARY KEY AUTO_INCREMENT,
@@ -63,15 +71,24 @@ CREATE TABLE subscriptions (
     id BIGINT PRIMARY KEY AUTO_INCREMENT,
     user_id BIGINT NOT NULL,
     tier_id BIGINT NOT NULL,
+    billing_cycle ENUM('monthly', 'yearly') DEFAULT 'monthly',
     status ENUM('active', 'cancelled', 'expired', 'trial') DEFAULT 'active',
+    managed_by ENUM('admin', 'stripe', 'manual') DEFAULT 'manual',  -- Who manages this subscription
     started_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    expires_at TIMESTAMP NULL,
+    current_period_end TIMESTAMP NULL,  -- When current billing period ends
+    cancel_at_period_end BOOLEAN DEFAULT FALSE,
     stripe_subscription_id VARCHAR(255) NULL,
+    stripe_customer_id VARCHAR(255) NULL,
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
     FOREIGN KEY (tier_id) REFERENCES tiers(id),
     INDEX idx_user_id (user_id),
-    INDEX idx_status (status)
+    INDEX idx_status (status),
+    INDEX idx_current_period_end (current_period_end)
 );
+
+-- Add subscription tracking to users
+ALTER TABLE users ADD COLUMN subscription_managed_by ENUM('admin', 'stripe', 'manual') DEFAULT 'manual';
+ALTER TABLE users ADD COLUMN subscription_expires_at TIMESTAMP NULL;
 
 -- Set existing users to free tier
 UPDATE users SET tier_id = 1 WHERE tier_id IS NULL;

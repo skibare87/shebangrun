@@ -16,6 +16,21 @@
                     <p class="text-lg" x-text="user.email"></p>
                 </div>
                 <div>
+                    <label class="text-sm font-medium text-gray-700">Current Plan</label>
+                    <p class="text-lg">
+                        <span class="px-3 py-1 rounded text-sm font-medium"
+                              :class="{
+                                  'bg-gray-200 text-gray-800': tierInfo.name === 'free',
+                                  'bg-blue-200 text-blue-800': tierInfo.name === 'pro',
+                                  'bg-purple-200 text-purple-800': tierInfo.name === 'ultimate'
+                              }"
+                              x-text="tierInfo.display_name"></span>
+                        <span x-show="tierInfo.price_monthly > 0" class="text-sm text-gray-600 ml-2">
+                            $<span x-text="tierInfo.price_monthly"></span>/month
+                        </span>
+                    </p>
+                </div>
+                <div>
                     <label class="text-sm font-medium text-gray-700">Account Type</label>
                     <p class="text-lg">
                         <span x-show="user.is_admin" class="bg-purple-100 text-purple-800 px-2 py-1 rounded text-sm">Admin</span>
@@ -204,6 +219,7 @@
 function accountSettings() {
     return {
         user: {},
+        tierInfo: { name: 'free', display_name: 'Free', price_monthly: 0 },
         apiTokens: [],
         passwordForm: { current: '', new: '', confirm: '' },
         passwordError: '',
@@ -214,13 +230,27 @@ function accountSettings() {
         newTokenName: '',
         createdToken: null,
         
-        init() {
+        async init() {
             if (!getToken()) {
                 window.location.href = '/login';
                 return;
             }
             this.user = JSON.parse(localStorage.getItem('user') || '{}');
             this.loadAPITokens();
+            await this.loadTierInfo();
+        },
+        
+        async loadTierInfo() {
+            try {
+                const response = await fetch('/api/account/tier', {
+                    headers: { 'Authorization': 'Bearer ' + getToken() }
+                });
+                if (response.ok) {
+                    this.tierInfo = await response.json();
+                }
+            } catch (e) {
+                console.error('Failed to load tier info:', e);
+            }
         },
         
         loadAPITokens() {

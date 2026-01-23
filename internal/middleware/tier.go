@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"net/http"
+	"time"
 	
 	"shebang.run/internal/database"
 )
@@ -12,13 +13,24 @@ type tierKey string
 
 const TierContextKey tierKey = "tier"
 
-// TierMiddleware loads user's tier into context
+// TierMiddleware loads user's tier into context and checks expiration
 func TierMiddleware(db *database.DB) func(http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			claims, ok := GetUserFromContext(r.Context())
 			if !ok {
 				next.ServeHTTP(w, r)
+				return
+			}
+			
+			// Check if subscription expired (from JWT)
+			if claims.SubscriptionExpiry != nil && time.Now().After(*claims.SubscriptionExpiry) {
+				// Downgrade to Free tier
+				db.UpdateUserTier(claims.UserID, 1)
+				db.Exec("UPDATE users SET subscription_expires_at = NULL, subscription_managed_by = 'manual' WHERE id = ?", claims.UserID)
+				
+				// Force re-login by returning unauthorized
+				http.Error(w, "Subscription expired. Please log in again.", http.StatusUnauthorized)
 				return
 			}
 			

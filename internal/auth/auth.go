@@ -10,9 +10,11 @@ import (
 )
 
 type Claims struct {
-	UserID  int64  `json:"user_id"`
-	Username string `json:"username"`
-	IsAdmin bool   `json:"is_admin"`
+	UserID             int64      `json:"user_id"`
+	Username           string     `json:"username"`
+	IsAdmin            bool       `json:"is_admin"`
+	TierID             int64      `json:"tier_id"`
+	SubscriptionExpiry *time.Time `json:"subscription_expiry,omitempty"`
 	jwt.RegisteredClaims
 }
 
@@ -25,11 +27,13 @@ func CheckPassword(password, hash string) bool {
 	return bcrypt.CompareHashAndPassword([]byte(hash), []byte(password)) == nil
 }
 
-func GenerateToken(userID int64, username string, isAdmin bool, secret string) (string, error) {
+func GenerateToken(userID int64, username string, isAdmin bool, tierID int64, subscriptionExpiry *time.Time, secret string) (string, error) {
 	claims := Claims{
-		UserID:   userID,
-		Username: username,
-		IsAdmin:  isAdmin,
+		UserID:             userID,
+		Username:           username,
+		IsAdmin:            isAdmin,
+		TierID:             tierID,
+		SubscriptionExpiry: subscriptionExpiry,
 		RegisteredClaims: jwt.RegisteredClaims{
 			ExpiresAt: jwt.NewNumericDate(time.Now().Add(24 * time.Hour)),
 			IssuedAt:  jwt.NewNumericDate(time.Now()),

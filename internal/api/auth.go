@@ -82,7 +82,7 @@ func (h *AuthHandler) Register(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	token, err := auth.GenerateToken(user.ID, user.Username, user.IsAdmin, h.cfg.JWTSecret)
+	token, err := auth.GenerateToken(user.ID, user.Username, user.IsAdmin, user.TierID, nil, h.cfg.JWTSecret)
 	if err != nil {
 		http.Error(w, "Failed to generate token", http.StatusInternalServerError)
 		return
@@ -168,7 +168,7 @@ func (h *AuthHandler) SetUsername(w http.ResponseWriter, r *http.Request) {
 	}
 	
 	// Generate new token with updated username
-	token, err := auth.GenerateToken(user.ID, user.Username, user.IsAdmin, h.cfg.JWTSecret)
+	token, err := auth.GenerateToken(user.ID, user.Username, user.IsAdmin, user.TierID, nil, h.cfg.JWTSecret)
 	if err != nil {
 		http.Error(w, "Failed to generate token", http.StatusInternalServerError)
 		return
@@ -204,7 +204,11 @@ func (h *AuthHandler) Login(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	token, err := auth.GenerateToken(user.ID, user.Username, user.IsAdmin, h.cfg.JWTSecret)
+	// Get subscription expiry
+	var expiresAt *time.Time
+	h.db.DB.QueryRow("SELECT subscription_expires_at FROM users WHERE id = ?", user.ID).Scan(&expiresAt)
+
+	token, err := auth.GenerateToken(user.ID, user.Username, user.IsAdmin, user.TierID, expiresAt, h.cfg.JWTSecret)
 	if err != nil {
 		http.Error(w, "Failed to generate token", http.StatusInternalServerError)
 		return
@@ -331,7 +335,11 @@ func (h *AuthHandler) OAuthCallback(w http.ResponseWriter, r *http.Request, prov
 		}
 	}
 
-	jwtToken, err := auth.GenerateToken(user.ID, user.Username, user.IsAdmin, h.cfg.JWTSecret)
+	// Get subscription expiry
+	var expiresAt *time.Time
+	h.db.DB.QueryRow("SELECT subscription_expires_at FROM users WHERE id = ?", user.ID).Scan(&expiresAt)
+
+	jwtToken, err := auth.GenerateToken(user.ID, user.Username, user.IsAdmin, user.TierID, expiresAt, h.cfg.JWTSecret)
 	if err != nil {
 		http.Error(w, "Failed to generate token", http.StatusInternalServerError)
 		return
