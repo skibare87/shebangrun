@@ -34,9 +34,9 @@ func (p *OpenAIProvider) GenerateScript(ctx context.Context, prompt string, args
 	systemPrompt := BuildSystemPrompt(args)
 	
 	reqBody := map[string]interface{}{
-		"model":       p.model,
-		"max_tokens":  4096,
-		"temperature": 0.7,
+		"model":                  p.model,
+		"max_completion_tokens":  4096,
+		"temperature":            0.7,
 		"messages": []map[string]string{
 			{"role": "system", "content": systemPrompt},
 			{"role": "user", "content": prompt},
