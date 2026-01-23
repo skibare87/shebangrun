@@ -18,7 +18,6 @@ WORKDIR /root/
 
 COPY --from=builder /app/server .
 COPY --from=builder /app/web ./web
-COPY --from=builder /app/migrations ./migrations
 COPY --from=builder /app/openapi.yaml .
 
 EXPOSE 8080
