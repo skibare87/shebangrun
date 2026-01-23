@@ -28,9 +28,9 @@ func main() {
 	}
 	defer db.Close()
 
-	// Run migrations
-	if err := database.RunMigrations(db.DB, "migrations"); err != nil {
-		log.Fatalf("Failed to run migrations: %v", err)
+	// Initialize database schema
+	if err := database.InitSchema(db.DB); err != nil {
+		log.Fatalf("Failed to initialize schema: %v", err)
 	}
 
 	var store storage.Storage
