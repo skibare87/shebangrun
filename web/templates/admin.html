@@ -215,9 +215,6 @@ function adminPanel() {
             this.loadUsers();
             this.loadTiers();
         },
-            );
-        },
-        
         loadUsers() {
             fetch('/api/admin/users', {
                 headers: { 'Authorization': 'Bearer ' + getToken() }
