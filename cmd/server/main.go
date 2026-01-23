@@ -83,14 +83,10 @@ func main() {
 		aiProviders["openai"] = openai
 	}
 	
-	// Bedrock (optional - requires AWS SDK)
-	// Uncomment when AWS SDK is added to go.mod
-	/*
-	ctx := context.Background()
-	if bedrock, err := ai.NewBedrockProvider(ctx); err == nil {
+	// Bedrock (with bearer token)
+	if bedrock := ai.NewBedrockProvider(); bedrock != nil {
 		aiProviders["bedrock"] = bedrock
 	}
-	*/
 	
 	var aiHandler *api.AIHandler
 	if len(aiProviders) > 0 {
