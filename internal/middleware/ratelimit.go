@@ -82,6 +82,12 @@ func RateLimitMiddleware(limit int) func(http.Handler) http.Handler {
 	
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			// Check if user is admin (bypass rate limiting)
+			if claims, ok := GetUserFromContext(r.Context()); ok && claims.IsAdmin {
+				next.ServeHTTP(w, r)
+				return
+			}
+			
 			ip := r.RemoteAddr
 			
 			if !globalRateLimiter.allow(ip) {
