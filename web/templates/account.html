@@ -29,6 +29,16 @@
                             $<span x-text="tierInfo.price_monthly"></span>/month
                         </span>
                     </p>
+                    <button x-show="tierInfo.name === 'free'" 
+                            @click="showUpgradeModal = true"
+                            class="mt-2 bg-indigo-600 text-white px-4 py-2 rounded hover:bg-indigo-700 text-sm">
+                        Upgrade Plan
+                    </button>
+                    <button x-show="tierInfo.name !== 'free'" 
+                            class="mt-2 bg-gray-600 text-white px-4 py-2 rounded hover:bg-gray-700 text-sm"
+                            disabled>
+                        Manage Subscription (Coming Soon)
+                    </button>
                 </div>
                 <div>
                     <label class="text-sm font-medium text-gray-700">Account Type</label>
@@ -185,6 +195,76 @@
         </div>
     </div>
 
+    <!-- Upgrade Modal -->
+    <div x-show="showUpgradeModal" @click.away="showUpgradeModal = false"
+         class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4" style="display: none;">
+        <div class="bg-white p-8 rounded-lg max-w-4xl w-full max-h-screen overflow-y-auto" @click.stop>
+            <h2 class="text-2xl font-bold mb-6">Choose Your Plan</h2>
+            
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+                <!-- Pro Tier -->
+                <div class="border-2 border-blue-500 rounded-lg p-6">
+                    <h3 class="text-xl font-bold mb-2">Pro</h3>
+                    <p class="text-3xl font-bold mb-2">$10<span class="text-sm text-gray-600">/mo</span></p>
+                    <p class="text-sm text-gray-600 mb-4">$96/year (save 20%)</p>
+                    <ul class="space-y-2 text-sm mb-6">
+                        <li>✓ 500MB storage</li>
+                        <li>✓ 50 secrets</li>
+                        <li>✓ 100 scripts</li>
+                        <li>✓ 5 AI generations/month</li>
+                        <li>✓ Public & unlisted scripts</li>
+                        <li>✓ Script sharing</li>
+                    </ul>
+                    <button class="w-full bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">
+                        Subscribe (Coming Soon)
+                    </button>
+                </div>
+                
+                <!-- Ultimate Tier -->
+                <div class="border-2 border-purple-500 rounded-lg p-6 relative">
+                    <div class="absolute top-0 right-0 bg-purple-500 text-white px-3 py-1 text-xs rounded-bl">POPULAR</div>
+                    <h3 class="text-xl font-bold mb-2">Ultimate</h3>
+                    <p class="text-3xl font-bold mb-2">$20<span class="text-sm text-gray-600">/mo</span></p>
+                    <p class="text-sm text-gray-600 mb-4">$192/year (save 20%)</p>
+                    <ul class="space-y-2 text-sm mb-6">
+                        <li>✓ 1GB storage</li>
+                        <li>✓ 500 secrets</li>
+                        <li>✓ 500 scripts</li>
+                        <li>✓ 500 AI generations/month</li>
+                        <li>✓ All script types</li>
+                        <li>✓ Advanced sharing</li>
+                        <li>✓ AI script generation</li>
+                    </ul>
+                    <button class="w-full bg-purple-600 text-white px-4 py-2 rounded hover:bg-purple-700">
+                        Subscribe (Coming Soon)
+                    </button>
+                </div>
+                
+                <!-- Free Tier -->
+                <div class="border rounded-lg p-6 bg-gray-50">
+                    <h3 class="text-xl font-bold mb-2">Free</h3>
+                    <p class="text-3xl font-bold mb-2">$0</p>
+                    <p class="text-sm text-gray-600 mb-4">&nbsp;</p>
+                    <ul class="space-y-2 text-sm mb-6 text-gray-600">
+                        <li>✓ 10MB storage</li>
+                        <li>✓ 5 secrets</li>
+                        <li>✓ 25 scripts</li>
+                        <li>✓ Public scripts only</li>
+                    </ul>
+                    <button class="w-full bg-gray-400 text-white px-4 py-2 rounded cursor-not-allowed" disabled>
+                        Current Plan
+                    </button>
+                </div>
+            </div>
+            
+            <div class="flex justify-end">
+                <button @click="showUpgradeModal = false" class="bg-gray-300 px-6 py-2 rounded hover:bg-gray-400">
+                    Close
+                </button>
+            </div>
+        </div>
+    </div>
+
     <!-- Delete Confirmation Modal -->
     <div x-show="showDeleteModal" @click.away="showDeleteModal = false"
          class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50" style="display: none;">
@@ -225,6 +305,7 @@ function accountSettings() {
         passwordError: '',
         passwordSuccess: false,
         showDeleteModal: false,
+        showUpgradeModal: false,
         showCreateTokenModal: false,
         deleteConfirm: '',
         newTokenName: '',
