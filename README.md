@@ -7,12 +7,13 @@ A platform for hosting and sharing shell scripts and code snippets with built-in
 - **Script Versioning**: Auto-incrementing versions with immutable history
 - **Access Control**: Private, unlisted, and public scripts with ACL-based sharing
 - **Encryption & Signing**: ChaCha20-Poly1305 encryption and RSA-PSS signatures
-- **Secrets Management**: Encrypted key-value store with audit logging
+- **Secrets Management**: Encrypted key-value store with audit logging and ${SECRET:name} substitution
 - **Script Sharing**: Share unlisted scripts with specific users or "anyone with link"
-- **Secret Injection**: Reference secrets in scripts with ${SECRET:name} syntax
+- **AI Script Generation**: Generate scripts from natural language prompts (Ultimate tier)
+- **User Tiers**: Free, Pro, and Ultimate plans with different limits and features
 - **Multiple Storage Backends**: S3-compatible or local filesystem
 - **OAuth Integration**: GitHub and Google authentication with username selection
-- **Rate Limiting**: Configurable per-user limits
+- **Rate Limiting**: Tier-based rate limiting with optional overrides
 - **Docker Deployment**: Complete stack with MariaDB and MinIO
 
 ## Quick Start
@@ -124,6 +125,13 @@ Environment variables:
 - `MASTER_ENCRYPTION_KEY`: Base64-encoded 32-byte key for server-side encryption
 - `MASTER_KEY_SOURCE`: Key source (`env`, `aws_kms`, `aws_secrets`)
 - `SECRETS_BACKEND`: Secrets storage backend (`database`, `redis`, `dynamodb`)
+- `CLAUDE_API_KEY`: Claude API key for AI generation
+- `CLAUDE_MODEL`: Claude model (default: claude-sonnet-4-20250514)
+- `OPENAI_API_KEY`: OpenAI API key for AI generation
+- `OPENAI_MODEL`: OpenAI model (default: gpt-5.2-2025-12-11)
+- `AWS_BEARER_TOKEN_BEDROCK`: Bedrock bearer token for AI generation
+- `BEDROCK_MODEL_ID`: Bedrock model (default: us.anthropic.claude-opus-4-5-20251101-v1:0)
+- `AWS_REGION`: AWS region for Bedrock (default: us-east-1)
 
 ## Architecture
 

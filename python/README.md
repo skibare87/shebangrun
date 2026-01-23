@@ -168,6 +168,24 @@ shebang get myscript -s
 shebang run myscript
 ```
 
+#### AI Script Generation (Ultimate Tier)
+```bash
+# Generate a script
+shebang infer "script that rotates an image 90 degrees" image.jpg
+
+# Execute immediately
+shebang infer -e "backup database to S3" /data/db
+
+# Save to file
+shebang infer -O rotate.sh "rotate image 90 degrees"
+
+# Save to shebang account
+shebang infer -s -n rotate-image -v public "rotate image 90 degrees"
+
+# Choose AI provider (bedrock, claude, openai)
+shebang infer -p bedrock "create backup script"
+```
+
 ### CLI Options
 
 **Visibility:**
@@ -291,6 +309,14 @@ client.add_script_access(script_id=1, usernames=["alice", "bob"])
 access_list = client.list_script_access(script_id=1)
 client.remove_script_access(script_id=1, access_id=5)
 shared = client.list_shared_scripts()
+
+# AI script generation (Ultimate tier)
+result = client.generate_script("script that backs up database", args=["db_path"])
+print(result['script'])  # Generated script
+print(result['tokens'])  # Token usage
+
+usage = client.get_ai_usage()
+print(f"Used {usage['used']} of {usage['limit']} AI generations this month")
 
 print(f"Version: {meta['version']}, Size: {meta['size']} bytes")
 
