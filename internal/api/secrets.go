@@ -3,6 +3,7 @@ package api
 import (
 	"database/sql"
 	"encoding/json"
+	"fmt"
 	"log"
 	"net/http"
 	"time"
@@ -82,6 +83,20 @@ func (h *SecretsHandler) Create(w http.ResponseWriter, r *http.Request) {
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
+	}
+	
+	// Check tier limits (admins bypass)
+	if !claims.IsAdmin {
+		tier, ok := middleware.GetTierFromContext(r.Context())
+		if ok {
+			// Check secret count
+			var count int
+			h.db.QueryRow("SELECT COUNT(*) FROM secrets WHERE user_id = ?", claims.UserID).Scan(&count)
+			if count >= tier.MaxSecrets {
+				http.Error(w, fmt.Sprintf("Secret limit reached (%d). Upgrade your tier.", tier.MaxSecrets), http.StatusForbidden)
+				return
+			}
+		}
 	}
 	
 	// Get UDEK

@@ -10,6 +10,7 @@ type User struct {
 	OAuthProvider string
 	OAuthID      string
 	IsAdmin      bool
+	TierID       int64
 	RateLimit    int
 	CreatedAt    time.Time
 }
@@ -131,4 +132,55 @@ type GroupMember struct {
 	UserID   int64
 	AddedBy  int64
 	AddedAt  time.Time
+}
+
+// Tier system models
+
+type Tier struct {
+	ID                 int64
+	Name               string
+	DisplayName        string
+	PriceMonthly       float64
+	MaxStorageBytes    int64
+	MaxSecrets         int
+	MaxScripts         int
+	MaxAIGenerations   int
+	RateLimit          int
+	AllowPublic        bool
+	AllowUnlisted      bool
+	AllowPrivate       bool
+	AllowAIGeneration  bool
+	CreatedAt          time.Time
+	UpdatedAt          time.Time
+}
+
+type AIGeneration struct {
+	ID              int64
+	UserID          int64
+	Prompt          string
+	Provider        string
+	Model           string
+	TokensUsed      int
+	ScriptGenerated string
+	CreatedAt       time.Time
+}
+
+type UsageStats struct {
+	ID                  int64
+	UserID              int64
+	Month               time.Time
+	StorageUsed         int64
+	SecretsCount        int
+	ScriptsCount        int
+	AIGenerationsCount  int
+}
+
+type Subscription struct {
+	ID                    int64
+	UserID                int64
+	TierID                int64
+	Status                string
+	StartedAt             time.Time
+	ExpiresAt             *time.Time
+	StripeSubscriptionID  string
 }

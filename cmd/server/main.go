@@ -167,6 +167,7 @@ func main() {
 
 	r.Route("/api/scripts", func(r chi.Router) {
 		r.Use(middleware.AuthMiddleware(cfg.JWTSecret, db))
+		r.Use(middleware.TierMiddleware(db))
 		r.Get("/", scriptHandler.List)
 		r.Post("/", scriptHandler.Create)
 		r.Get("/{id}", scriptHandler.Get)
@@ -223,6 +224,7 @@ func main() {
 	if secretsHandler != nil {
 		r.Route("/api/secrets", func(r chi.Router) {
 			r.Use(middleware.AuthMiddleware(cfg.JWTSecret, db))
+			r.Use(middleware.TierMiddleware(db))
 			r.Get("/", secretsHandler.List)
 			r.Post("/", secretsHandler.Create)
 			r.Get("/{name}/value", secretsHandler.GetValue)

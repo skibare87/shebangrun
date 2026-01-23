@@ -176,6 +176,14 @@ func (h *ScriptHandler) Create(w http.ResponseWriter, r *http.Request) {
 		req.Visibility = "private"
 	}
 
+	// Check tier permissions (admins bypass)
+	if !claims.IsAdmin {
+		if !middleware.CheckFeature(r.Context(), req.Visibility) {
+			http.Error(w, fmt.Sprintf("Your tier does not support %s scripts", req.Visibility), http.StatusForbidden)
+			return
+		}
+	}
+
 	count, err := h.db.GetScriptCount(claims.UserID)
 	if err != nil {
 		http.Error(w, "Internal error", http.StatusInternalServerError)
