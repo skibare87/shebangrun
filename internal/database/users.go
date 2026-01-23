@@ -87,7 +87,7 @@ func (db *DB) UpdateUsername(userID int64, username string) error {
 
 func (db *DB) ListUsers(limit, offset int) ([]*User, error) {
 	rows, err := db.Query(
-		"SELECT id, username, email, password_hash, COALESCE(oauth_provider, ''), COALESCE(oauth_id, ''), is_admin, rate_limit, created_at FROM users ORDER BY created_at DESC LIMIT ? OFFSET ?",
+		"SELECT id, username, email, password_hash, COALESCE(oauth_provider, ''), COALESCE(oauth_id, ''), is_admin, tier_id, rate_limit, created_at FROM users ORDER BY created_at DESC LIMIT ? OFFSET ?",
 		limit, offset,
 	)
 	if err != nil {
@@ -98,7 +98,7 @@ func (db *DB) ListUsers(limit, offset int) ([]*User, error) {
 	var users []*User
 	for rows.Next() {
 		user := &User{}
-		if err := rows.Scan(&user.ID, &user.Username, &user.Email, &user.PasswordHash, &user.OAuthProvider, &user.OAuthID, &user.IsAdmin, &user.RateLimit, &user.CreatedAt); err != nil {
+		if err := rows.Scan(&user.ID, &user.Username, &user.Email, &user.PasswordHash, &user.OAuthProvider, &user.OAuthID, &user.IsAdmin, &user.TierID, &user.RateLimit, &user.CreatedAt); err != nil {
 			return nil, err
 		}
 		users = append(users, user)
