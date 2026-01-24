@@ -205,7 +205,29 @@ SHEBANG_KEY_PATH="/path/to/key.pem"
 
 ## Python Library
 
-## Python Library
+### Google Colab Usage
+
+```python
+import shebangrun as shebang
+from google.colab import userdata
+
+# Initialize from Colab secrets
+shebangrc = userdata.get('shebangrc')
+key = userdata.get('colabpem')
+shebang.init(shebangrc)
+
+# Run script with variables
+results = shebang.run(
+    script="pythontest",
+    key=key,
+    eval=True,
+    accept=True,
+    vars={"C": 5}
+)
+
+# Access variables from script
+print(results['A'])  # Variables defined in script
+```
 
 ### Simple Script Fetching
 
