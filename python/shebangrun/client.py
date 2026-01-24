@@ -40,22 +40,113 @@ def init(shebangrc_content: str):
             _global_config[key] = value
 
 
+def infer(prompt: str, args: list = None, provider: str = None, eval: bool = False, accept: bool = False, vars: dict = None, language: str = "python") -> Any:
+    """
+    Generate a script with AI using global config
+    
+    Args:
+        prompt: Description of what the script should do
+        args: Script arguments (optional)
+        provider: AI provider - 'bedrock', 'claude', or 'openai' (optional)
+        eval: If True, execute the generated script (default: False)
+        accept: If True, skip confirmation prompt when eval=True (default: False)
+        vars: Variables to inject if eval=True (optional)
+        language: Script language - 'python', 'bash', 'shell' (default: 'python')
+    
+    Returns:
+        Generated script as string if eval=False, or execution result if eval=True
+    
+    Example:
+        shebangrun.init(shebangrc_content)
+        
+        # Generate Python script
+        script = shebangrun.infer("calculate factorial of n", args=["n"])
+        
+        # Generate and execute
+        result = shebangrun.infer("calculate factorial", eval=True, vars={"n": 5})
+        print(result['factorial'])
+        
+        # Generate bash script
+        script = shebangrun.infer("backup files", language="bash")
+    """
+    if 'SHEBANG_CLIENT_ID' not in _global_config:
+        raise ValueError("Not initialized. Call init() first.")
+    
+    url = _global_config.get('SHEBANG_URL', 'https://shebang.run').replace('https://', '').replace('http://', '')
+    client = ShebangClient(url=url)
+    client.session.auth = (_global_config['SHEBANG_CLIENT_ID'], _global_config['SHEBANG_CLIENT_SECRET'])
+    
+    # Add language context to prompt
+    if language:
+        if language == "python":
+            # Special prompt for Python to work with exec()
+            enhanced_prompt = f"""Create a Python script that {prompt}.
+
+Requirements:
+- Do NOT use sys.argv or command-line argument parsing
+- Variables will be available directly in the namespace: {', '.join(args) if args else 'none'}
+- Just use the variables directly (they're already defined)
+- Do NOT include if __name__ == '__main__' block
+- Write code that works with exec() in a notebook environment
+- Output results by defining variables or printing"""
+        else:
+            enhanced_prompt = f"Create a {language} script that {prompt}"
+    else:
+        enhanced_prompt = prompt
+    
+    result = client.generate_script(enhanced_prompt, args, provider)
+    script = result['script']
+    
+    if eval:
+        # Show confirmation unless accept=True
+        if not accept:
+            print("Generated script:")
+            print("=" * 60)
+            print(script)
+            print("=" * 60)
+            confirm = input("\nExecute this script? (y/N): ").strip().lower()
+            if confirm != 'y':
+                print("Cancelled")
+                return None
+        
+        import inspect
+        exec_namespace = {}
+        caller_globals = inspect.currentframe().f_back.f_globals
+        exec_namespace.update(caller_globals)
+        if vars:
+            exec_namespace.update(vars)
+        exec(script, exec_namespace)
+        return exec_namespace
+    
+    return script
+
+
 class ShebangClient:
     """Client for interacting with shebang.run API"""
     
-    def __init__(self, url: str = "shebang.run", token: Optional[str] = None):
+    def __init__(self, url: str = None, token: Optional[str] = None):
         """
         Initialize the client
         
         Args:
-            url: Base URL (default: shebang.run)
-            token: JWT token for authenticated requests
+            url: Base URL (uses global config if not provided)
+            token: JWT token for authenticated requests (uses global config if not provided)
         """
+        # Use global config if available
+        if url is None and 'SHEBANG_URL' in _global_config:
+            url = _global_config['SHEBANG_URL'].replace('https://', '').replace('http://', '')
+        if url is None:
+            url = "shebang.run"
+            
         self.base_url = f"https://{url}"
         self.token = token
         self.session = requests.Session()
+        
         if token:
             self.session.headers.update({"Authorization": f"Bearer {token}"})
+        elif 'SHEBANG_CLIENT_ID' in _global_config and 'SHEBANG_CLIENT_SECRET' in _global_config:
+            # Use API token auth from global config
+            self.session.auth = (_global_config['SHEBANG_CLIENT_ID'], _global_config['SHEBANG_CLIENT_SECRET'])
     
     def get_script(self, username: str, script: str, version: Optional[str] = None, 
                    token: Optional[str] = None) -> tuple:
