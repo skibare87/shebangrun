@@ -22,15 +22,18 @@ func TierMiddleware(db *database.DB) func(http.Handler) http.Handler {
 				return
 			}
 			
-			// Check if subscription expired (from JWT)
-			if claims.SubscriptionExpiry != nil && time.Now().After(*claims.SubscriptionExpiry) {
-				// Downgrade to Free tier
-				db.UpdateUserTier(claims.UserID, 1)
-				db.Exec("UPDATE users SET subscription_expires_at = NULL, subscription_managed_by = 'manual' WHERE id = ?", claims.UserID)
-				
-				// Force re-login by returning unauthorized
-				http.Error(w, "Subscription expired. Please log in again.", http.StatusUnauthorized)
-				return
+			// Admins bypass expiration checks
+			if !claims.IsAdmin {
+				// Check if subscription expired (from JWT)
+				if claims.SubscriptionExpiry != nil && time.Now().After(*claims.SubscriptionExpiry) {
+					// Downgrade to Free tier
+					db.UpdateUserTier(claims.UserID, 1)
+					db.Exec("UPDATE users SET subscription_expires_at = NULL, subscription_managed_by = 'manual' WHERE id = ?", claims.UserID)
+					
+					// Force re-login by returning unauthorized
+					http.Error(w, "Subscription expired. Please log in again.", http.StatusUnauthorized)
+					return
+				}
 			}
 			
 			tier, err := db.GetUserTier(claims.UserID)

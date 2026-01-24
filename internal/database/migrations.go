@@ -299,6 +299,9 @@ func InitSchema(db *sql.DB) error {
 		}
 	}
 	
+	// Set admins to Ultimate tier
+	db.Exec("UPDATE users SET tier_id = 3 WHERE is_admin = TRUE AND tier_id != 3")
+	
 	log.Println("Database schema initialized")
 	return nil
 }

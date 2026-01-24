@@ -107,7 +107,6 @@ func main() {
 	r.Use(chimiddleware.Logger)
 	r.Use(chimiddleware.Recoverer)
 	r.Use(chimiddleware.RealIP)
-	r.Use(middleware.RateLimitMiddleware(cfg.DefaultRateLimit, db))
 	r.Use(cors.Handler(cors.Options{
 		AllowedOrigins:   []string{"*"},
 		AllowedMethods:   []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
@@ -120,11 +119,11 @@ func main() {
 		w.Write([]byte("OK"))
 	})
 
-	// Serve static files
+	// Serve static files (no rate limit)
 	fileServer := http.FileServer(http.Dir("web/static"))
 	r.Handle("/static/*", http.StripPrefix("/static/", fileServer))
 	
-	// Serve OpenAPI spec
+	// Serve OpenAPI spec (no rate limit)
 	r.Get("/openapi.yaml", func(w http.ResponseWriter, r *http.Request) {
 		http.ServeFile(w, r, "openapi.yaml")
 	})
@@ -173,6 +172,7 @@ func main() {
 	})
 
 	r.Route("/api/auth", func(r chi.Router) {
+		r.Use(middleware.RateLimitMiddleware(cfg.DefaultRateLimit, db))
 		r.Post("/register", authHandler.Register)
 		r.Post("/login", authHandler.Login)
 		r.Get("/check-username", authHandler.CheckUsername)
@@ -192,6 +192,7 @@ func main() {
 	})
 
 	r.Route("/api/keys", func(r chi.Router) {
+		r.Use(middleware.RateLimitMiddleware(cfg.DefaultRateLimit, db))
 		r.Use(middleware.AuthMiddleware(cfg.JWTSecret, db))
 		r.Get("/", keyHandler.List)
 		r.Post("/generate", keyHandler.Generate)
@@ -200,6 +201,7 @@ func main() {
 	})
 
 	r.Route("/api/scripts", func(r chi.Router) {
+		r.Use(middleware.RateLimitMiddleware(cfg.DefaultRateLimit, db))
 		r.Use(middleware.AuthMiddleware(cfg.JWTSecret, db))
 		r.Use(middleware.TierMiddleware(db))
 		r.Get("/", scriptHandler.List)
