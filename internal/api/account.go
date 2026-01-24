@@ -2,6 +2,7 @@ package api
 
 import (
 	"encoding/json"
+	"log"
 	"net/http"
 	"strconv"
 	"time"
@@ -137,12 +138,14 @@ type APITokenResponse struct {
 func (h *AccountHandler) ListAPITokens(w http.ResponseWriter, r *http.Request) {
 	claims, ok := middleware.GetUserFromContext(r.Context())
 	if !ok {
+		log.Printf("ListAPITokens: No user in context")
 		http.Error(w, "Unauthorized", http.StatusUnauthorized)
 		return
 	}
 
 	tokens, err := h.db.GetAPITokensByUserID(claims.UserID)
 	if err != nil {
+		log.Printf("ListAPITokens error for user %d: %v", claims.UserID, err)
 		http.Error(w, "Failed to fetch tokens", http.StatusInternalServerError)
 		return
 	}
@@ -169,6 +172,7 @@ func (h *AccountHandler) ListAPITokens(w http.ResponseWriter, r *http.Request) {
 func (h *AccountHandler) CreateAPIToken(w http.ResponseWriter, r *http.Request) {
 	claims, ok := middleware.GetUserFromContext(r.Context())
 	if !ok {
+		log.Printf("CreateAPIToken: No user in context")
 		http.Error(w, "Unauthorized", http.StatusUnauthorized)
 		return
 	}
@@ -177,6 +181,7 @@ func (h *AccountHandler) CreateAPIToken(w http.ResponseWriter, r *http.Request) 
 		Name string `json:"name"`
 	}
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		log.Printf("CreateAPIToken decode error: %v", err)
 		http.Error(w, "Invalid request", http.StatusBadRequest)
 		return
 	}
@@ -192,6 +197,7 @@ func (h *AccountHandler) CreateAPIToken(w http.ResponseWriter, r *http.Request) 
 
 	token, err := h.db.CreateAPIToken(claims.UserID, req.Name, clientID, clientSecret)
 	if err != nil {
+		log.Printf("CreateAPIToken error for user %d: %v", claims.UserID, err)
 		http.Error(w, "Failed to create token", http.StatusInternalServerError)
 		return
 	}

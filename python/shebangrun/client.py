@@ -5,6 +5,40 @@ Main client for interacting with shebang.run
 import requests
 from typing import Optional, Any
 
+# Global config for init()
+_global_config = {}
+
+
+def init(shebangrc_content: str):
+    """
+    Initialize shebangrun from .shebangrc content
+    
+    Args:
+        shebangrc_content: Contents of .shebangrc file
+        
+    Example:
+        from google.colab import userdata
+        import shebangrun
+        
+        shebangrc = userdata.get('shebangrc')
+        shebangrun.init(shebangrc)
+        
+        # Now run() will use the config
+        result = shebangrun.run(script="myscript", eval=True)
+    """
+    global _global_config
+    _global_config = {}
+    
+    for line in shebangrc_content.strip().split('\n'):
+        line = line.strip()
+        if not line or line.startswith('#'):
+            continue
+        if '=' in line:
+            key, value = line.split('=', 1)
+            # Remove quotes
+            value = value.strip().strip('"').strip("'")
+            _global_config[key] = value
+
 
 class ShebangClient:
     """Client for interacting with shebang.run API"""
@@ -314,19 +348,19 @@ class ShebangClient:
         return response.json()
 
 
-def run(username: str, script: str, key: Optional[str] = None, 
-        eval: bool = False, accept: bool = False, url: str = "shebang.run",
+def run(username: str = None, script: str = None, key: Optional[str] = None, 
+        eval: bool = False, accept: bool = False, url: str = None,
         version: Optional[str] = None, token: Optional[str] = None) -> Any:
     """
     Convenience function to fetch and optionally execute a script
     
     Args:
-        username: Script owner's username (required)
+        username: Script owner's username (uses config if not provided)
         script: Script name (required)
-        key: Private key contents for decryption (optional)
+        key: Private key contents for decryption (uses config if not provided)
         eval: If True, evaluate the script in Python (default: False)
         accept: If True, skip confirmation prompt when eval=True (default: False)
-        url: Base URL (default: shebang.run)
+        url: Base URL (uses config if not provided, default: shebang.run)
         version: Version tag (optional, e.g., "latest", "v1", "dev")
         token: Share token for private scripts (optional)
     
@@ -334,15 +368,35 @@ def run(username: str, script: str, key: Optional[str] = None,
         Script content as string if eval=False, or result of eval() if eval=True
     
     Examples:
-        # Just fetch the script
+        # With init()
+        shebangrun.init(shebangrc_content)
+        content = shebangrun.run(script="myscript")
+        
+        # Direct usage
         content = run(username="mpruitt", script="bashtest")
         
-        # Fetch encrypted script with private key
+        # With encryption
         content = run(username="mpruitt", script="private", key="-----BEGIN PRIVATE KEY-----\\n...")
-        
-        # Fetch and evaluate with confirmation
-        run(username="mpruitt", script="myscript", eval=True)
     """
+    # Use global config if available
+    if not username and 'SHEBANG_USERNAME' in _global_config:
+        username = _global_config['SHEBANG_USERNAME']
+    if not url and 'SHEBANG_URL' in _global_config:
+        url = _global_config['SHEBANG_URL'].replace('https://', '').replace('http://', '')
+    if not key and 'SHEBANG_KEY_PATH' in _global_config:
+        try:
+            with open(_global_config['SHEBANG_KEY_PATH']) as f:
+                key = f.read()
+        except:
+            pass
+    
+    if not username:
+        raise ValueError("username required (provide directly or via init())")
+    if not script:
+        raise ValueError("script required")
+    if not url:
+        url = "shebang.run"
+    
     client = ShebangClient(url=url)
     
     # Fetch the script

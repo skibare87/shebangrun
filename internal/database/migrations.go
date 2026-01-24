@@ -147,7 +147,7 @@ func InitSchema(db *sql.DB) error {
 			user_id BIGINT NOT NULL,
 			name VARCHAR(255) NOT NULL,
 			client_id VARCHAR(255) UNIQUE NOT NULL,
-			client_secret_hash VARCHAR(255) NOT NULL,
+			client_secret VARCHAR(255) NOT NULL,
 			created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
 			last_used TIMESTAMP NULL,
 			FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
