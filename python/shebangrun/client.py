@@ -350,7 +350,8 @@ class ShebangClient:
 
 def run(username: str = None, script: str = None, key: Optional[str] = None, 
         eval: bool = False, accept: bool = False, url: str = None,
-        version: Optional[str] = None, token: Optional[str] = None) -> Any:
+        version: Optional[str] = None, token: Optional[str] = None,
+        vars: dict = None) -> Any:
     """
     Convenience function to fetch and optionally execute a script
     
@@ -363,20 +364,18 @@ def run(username: str = None, script: str = None, key: Optional[str] = None,
         url: Base URL (uses config if not provided, default: shebang.run)
         version: Version tag (optional, e.g., "latest", "v1", "dev")
         token: Share token for private scripts (optional)
+        vars: Dictionary of variables to inject into script context (optional)
     
     Returns:
         Script content as string if eval=False, or result of eval() if eval=True
     
     Examples:
+        # Pass variables to script
+        result = shebangrun.run(script="calc", vars={"C": 5, "data": [1,2,3]}, eval=True)
+        
         # With init()
         shebangrun.init(shebangrc_content)
         content = shebangrun.run(script="myscript")
-        
-        # Direct usage
-        content = run(username="mpruitt", script="bashtest")
-        
-        # With encryption
-        content = run(username="mpruitt", script="private", key="-----BEGIN PRIVATE KEY-----\\n...")
     """
     # Use global config if available
     if not username and 'SHEBANG_USERNAME' in _global_config:
@@ -489,9 +488,20 @@ def run(username: str = None, script: str = None, key: Optional[str] = None,
             
             # If shebang contains 'python', execute in current context with exec
             if 'python' in shebang:
-                exec_globals = {}
-                exec(content, exec_globals)
-                return exec_globals
+                # Create execution namespace
+                import inspect
+                exec_namespace = {}
+                
+                # Start with caller's globals for access to their variables
+                caller_globals = inspect.currentframe().f_back.f_globals
+                exec_namespace.update(caller_globals)
+                
+                # Inject vars if provided
+                if vars:
+                    exec_namespace.update(vars)
+                
+                exec(content, exec_namespace)
+                return exec_namespace
             else:
                 # Execute with specified interpreter (bash, sh, etc.)
                 with tempfile.NamedTemporaryFile(mode='w', suffix='.sh', delete=False) as f:
