@@ -36,6 +36,12 @@ tags:
     description: Script management and retrieval
   - name: Keys
     description: RSA keypair management
+  - name: Secrets
+    description: Encrypted key-value secrets store
+  - name: Sharing
+    description: Script access control and sharing
+  - name: AI
+    description: AI script generation (Ultimate tier)
   - name: Account
     description: Account settings and API tokens
   - name: Admin
@@ -713,3 +719,325 @@ paths:
       responses:
         '200':
           description: User deleted
+
+  
+  # Secrets Management
+  /api/secrets:
+    get:
+      tags: [Secrets]
+      summary: List user's secrets
+      security:
+        - BearerAuth: []
+        - BasicAuth: []
+      responses:
+        '200':
+          description: List of secrets
+    
+    post:
+      tags: [Secrets]
+      summary: Create or update a secret
+      security:
+        - BearerAuth: []
+        - BasicAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [key_name, value]
+              properties:
+                key_name:
+                  type: string
+                value:
+                  type: string
+                expires_at:
+                  type: string
+                  format: date-time
+      responses:
+        '201':
+          description: Secret created
+  
+  /api/secrets/{name}/value:
+    get:
+      tags: [Secrets]
+      summary: Get secret value
+      security:
+        - BearerAuth: []
+        - BasicAuth: []
+      parameters:
+        - name: name
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Secret value
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  value:
+                    type: string
+  
+  /api/secrets/{name}:
+    delete:
+      tags: [Secrets]
+      summary: Delete a secret
+      security:
+        - BearerAuth: []
+        - BasicAuth: []
+      parameters:
+        - name: name
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '204':
+          description: Secret deleted
+  
+  /api/secrets/{name}/audit:
+    get:
+      tags: [Secrets]
+      summary: Get secret audit log
+      security:
+        - BearerAuth: []
+        - BasicAuth: []
+      parameters:
+        - name: name
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Audit log entries
+  
+  # Script Sharing
+  /api/scripts/{id}/access:
+    get:
+      tags: [Sharing]
+      summary: List script access control
+      security:
+        - BearerAuth: []
+        - BasicAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Access list
+    
+    post:
+      tags: [Sharing]
+      summary: Add users or enable link sharing
+      security:
+        - BearerAuth: []
+        - BasicAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [access_type]
+              properties:
+                access_type:
+                  type: string
+                  enum: [link, user]
+                usernames:
+                  type: array
+                  items:
+                    type: string
+      responses:
+        '201':
+          description: Access added
+  
+  /api/scripts/{id}/access/{access_id}:
+    delete:
+      tags: [Sharing]
+      summary: Remove access
+      security:
+        - BearerAuth: []
+        - BasicAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+        - name: access_id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '204':
+          description: Access removed
+  
+  /api/shared/scripts:
+    get:
+      tags: [Sharing]
+      summary: List scripts shared with you
+      security:
+        - BearerAuth: []
+        - BasicAuth: []
+      responses:
+        '200':
+          description: Shared scripts
+  
+  /api/users/search:
+    get:
+      tags: [Sharing]
+      summary: Search users for sharing
+      security:
+        - BearerAuth: []
+        - BasicAuth: []
+      parameters:
+        - name: q
+          in: query
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Matching usernames
+  
+  # AI Generation
+  /api/ai/generate:
+    post:
+      tags: [AI]
+      summary: Generate script with AI (Ultimate tier)
+      security:
+        - BearerAuth: []
+        - BasicAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [prompt]
+              properties:
+                prompt:
+                  type: string
+                args:
+                  type: array
+                  items:
+                    type: string
+                provider:
+                  type: string
+                  enum: [bedrock, claude, openai]
+      responses:
+        '200':
+          description: Generated script
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  script:
+                    type: string
+                  provider:
+                    type: string
+                  model:
+                    type: string
+                  tokens:
+                    type: integer
+  
+  /api/ai/usage:
+    get:
+      tags: [AI]
+      summary: Get AI generation usage stats
+      security:
+        - BearerAuth: []
+        - BasicAuth: []
+      responses:
+        '200':
+          description: Usage statistics
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  used:
+                    type: integer
+                  limit:
+                    type: integer
+                  unlimited:
+                    type: boolean
+  
+  /api/account/tier:
+    get:
+      tags: [Account]
+      summary: Get current tier information
+      security:
+        - BearerAuth: []
+        - BasicAuth: []
+      responses:
+        '200':
+          description: Tier information
+  
+  /api/admin/tiers:
+    get:
+      tags: [Admin]
+      summary: List all tiers (admin only)
+      security:
+        - BearerAuth: []
+        - BasicAuth: []
+      responses:
+        '200':
+          description: List of tiers
+  
+  /api/auth/check-username:
+    get:
+      tags: [Authentication]
+      summary: Check if username is available
+      parameters:
+        - name: username
+          in: query
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Availability status
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  available:
+                    type: boolean
+  
+  /api/auth/set-username:
+    post:
+      tags: [Authentication]
+      summary: Set username for OAuth users
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [username]
+              properties:
+                username:
+                  type: string
+      responses:
+        '200':
+          description: Username set, returns new token

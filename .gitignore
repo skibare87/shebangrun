@@ -72,3 +72,4 @@ build.sh
 
 # Test files with secrets
 docker-compose.test.yml
+console_out
